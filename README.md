@@ -28,12 +28,57 @@ Cybersecurity is a literal Babel — every platform speaks a different dialect, 
 
 ## Requirements
 
-| Dependency | Version |
+### Runtime
+
+| Dependency | Version | Notes |
+|---|---|---|
+| Kibana / Elasticsearch | 9.3.4 | Pinned — see note below |
+| Python | 3.11+ | Required by the Sigma conversion API |
+
+### Build tools
+
+| Dependency | Version | Notes |
+|---|---|---|
+| Node.js | 20+ | Build only |
+| `zip` CLI | any | Build only |
+
+### npm packages (runtime)
+
+| Package | Version |
 |---|---|
-| Kibana / Elasticsearch | 9.3.4 |
-| Node.js (build only) | 20+ |
-| Python | 3.11+ |
-| `zip` CLI (build only) | any |
+| `@elastic/eui` | ^114.3.0 |
+| `js-yaml` | ^4.2.0 |
+| `react` | ^18.3.1 |
+| `react-dom` | ^18.3.1 |
+
+### npm packages (dev / build)
+
+| Package | Version |
+|---|---|
+| `typescript` | ^5.9.3 |
+| `webpack` | ^5.107.2 |
+| `webpack-cli` | ^6.0.1 |
+| `ts-loader` | ^9.6.0 |
+| `html-webpack-plugin` | ^5.6.7 |
+| `jest` | ^30.4.2 |
+| `jest-environment-jsdom` | ^30.4.1 |
+| `ts-jest` | ^29.4.11 |
+| `@testing-library/react` | ^16.3.2 |
+| `@types/node` | ^20.19.42 |
+| `@types/react` | ^18.3.31 |
+| `@types/react-dom` | ^18.3.7 |
+| `@types/jest` | ^30.0.0 |
+| `@types/js-yaml` | ^4.0.9 |
+
+### Python packages (Sigma conversion engine)
+
+These are required by `server/translation_script/sigma/`. Set up a virtual environment before building or running the conversion script:
+
+| Package | Version |
+|---|---|
+| `pySigma` | >=0.11.0, <1.0.0 |
+| `pySigma-backend-elasticsearch` | >=1.0.0, <2.0.0 |
+| `PyYAML` | >=6.0.0, <7.0.0 |
 
 > **Important:** `kibanaVersion` in `kibana.json` is pinned to `9.3.4`. Kibana will refuse to load the plugin on a different version. If your target version differs, re-build with `KIBANA_VERSION=<your-version> npm run build` — the build script patches `kibana.json` automatically before packaging.
 

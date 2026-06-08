@@ -1,0 +1,13 @@
+{
+  "id": "babel",
+  "version": "2.0.1",
+  "kibanaVersion": "9.3.4",
+  "server": true,
+  "ui": true,
+  "description": "Babel — SIGMA rule editor and multi-SIEM converter",
+  "owner": {
+    "name": "babel"
+  },
+  "requiredPlugins": [],
+  "optionalPlugins": []
+}
