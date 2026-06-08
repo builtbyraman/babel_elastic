@@ -1,8 +1,0 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.TopNav = void 0;
-const jsx_runtime_1 = require("react/jsx-runtime");
-const eui_1 = require("@elastic/eui");
-const TopNav = ({ onNewRule, onSelectRule, onSyncRules, onOpenSettings, onOpenCoverage, isSyncing, coverageActive, }) => ((0, jsx_runtime_1.jsxs)(eui_1.EuiHeader, { position: "fixed", children: [(0, jsx_runtime_1.jsxs)(eui_1.EuiHeaderSection, { grow: false, children: [(0, jsx_runtime_1.jsx)(eui_1.EuiHeaderSectionItem, { children: (0, jsx_runtime_1.jsx)(eui_1.EuiHeaderLogo, { iconType: "globe", onClick: onNewRule, style: { cursor: 'pointer' }, children: "Babel" }) }), (0, jsx_runtime_1.jsx)(eui_1.EuiHeaderSectionItem, { children: (0, jsx_runtime_1.jsx)(eui_1.EuiButtonIcon, { "aria-label": "Settings", iconType: "gear", size: "s", color: "text", onClick: onOpenSettings }) })] }), (0, jsx_runtime_1.jsx)(eui_1.EuiHeaderSection, { side: "right", children: (0, jsx_runtime_1.jsx)(eui_1.EuiHeaderSectionItem, { children: (0, jsx_runtime_1.jsxs)(eui_1.EuiHeaderLinks, { gutterSize: "s", children: [(0, jsx_runtime_1.jsx)(eui_1.EuiHeaderLink, { iconType: "search", onClick: onSelectRule, children: "Select Rule" }), (0, jsx_runtime_1.jsx)(eui_1.EuiHeaderLink, { iconType: "heatmap", onClick: onOpenCoverage, isActive: coverageActive, children: "Coverage" }), (0, jsx_runtime_1.jsx)(eui_1.EuiHeaderLink, { iconType: "refresh", onClick: onSyncRules, isDisabled: isSyncing, children: isSyncing ? 'Syncing…' : 'Sync Rules' }), (0, jsx_runtime_1.jsx)(eui_1.EuiButton, { size: "s", fill: true, iconType: "plusInCircle", onClick: onNewRule, style: { marginLeft: 4 }, children: "New Rule" })] }) }) })] }));
-exports.TopNav = TopNav;
-//# sourceMappingURL=TopNav.js.map

@@ -260,7 +260,9 @@ export const CoverageHeatmap: React.FC<CoverageHeatmapProps> = ({ apiService, em
     }
   }
 
-  const coveredCount = coverage?.covered_techniques ?? 0;
+  const coveredCount = coverage
+    ? Object.keys(TECHNIQUE_MAP).filter(id => (ruleCounts[id] ?? 0) > 0).length
+    : 0;
   const tacticsCovered = coverage?.covered_tactics?.length ?? 0;
   const pct = TOTAL_TECHNIQUES > 0 ? Math.round((coveredCount / TOTAL_TECHNIQUES) * 100) : 0;
 

@@ -1,6 +1,6 @@
 # Babel
 
-Cybersecurity is a literal Babel — every platform speaks a different dialect, and detection rules written for one rarely run on another. Babel reverses the challenge: Built on the updated [SIGMA](https://sigmahq.io/) open standard and running natively inside modernized Elastic and Kibana, it lets security teams author, convert, test, and deploy detection rules across platforms and tools from a single interface.
+Cybersecurity is a literal Babel — every platform speaks a different dialect, and detection rules written for one rarely run on another. Babel reverses the challenge: Built on the updated [SIGMA](https://sigmahq.io/) open standard and running natively inside modernized Elastic and Kibana, it lets security teams author, convert, test, deploy, and track detection rules across platforms and tools from a single interface aligned to the incident response lifecycle and tactics, techniques, and procedures.
 
 ## Features
 
@@ -21,8 +21,8 @@ Cybersecurity is a literal Babel — every platform speaks a different dialect, 
 - **Field suggestions** — auto-map SIGMA fields to ECS fields
 - **Schema drift detection** — track changes to Elasticsearch mappings over time
 - **Rule quality scoring** — assess rule effectiveness and staleness
-- **Data source monitoring** — inspect available indices, document counts, and field mappings
-- **GitHub sync** — pull rules from the SigmaHQ repository
+- **Data source availability mapping** — inspect available indices, document counts, and field mappings
+- **GitHub sync** — pull rules from multiple configurable GitHub repositories (SigmaHQ and custom repos); all rules synced with no cap
 
 ---
 
@@ -78,7 +78,6 @@ These are required by `server/translation_script/sigma/`. Set up a virtual envir
 |---|---|
 | `pySigma` | >=0.11.0, <1.0.0 |
 | `pySigma-backend-elasticsearch` | >=1.0.0, <2.0.0 |
-| `PyYAML` | >=6.0.0, <7.0.0 |
 
 > **Important:** `kibanaVersion` in `kibana.json` is pinned to `9.3.4`. Kibana will refuse to load the plugin on a different version. If your target version differs, re-build with `KIBANA_VERSION=<your-version> npm run build` — the build script patches `kibana.json` automatically before packaging.
 
@@ -184,7 +183,7 @@ If you received a `babel-<version>.zip` file, install it directly into Kibana:
 
 ```bash
 # Kibana must be stopped during installation
-bin/kibana-plugin install file:///absolute/path/to/babel-2.0.1.zip
+bin/kibana-plugin install file:///absolute/path/to/babel-9.3.4.zip
 ```
 
 Then configure the plugin (see [Configuration](#configuration)) and restart Kibana.
@@ -209,11 +208,11 @@ npm install
 The bundled Python script requires a virtual environment with pySigma. Run this once before building:
 
 ```bash
-cd server/translation_script/sigma
+cd server/translation_script
 python3.11 -m venv .venv
 .venv/bin/pip install --upgrade pip
-.venv/bin/pip install -r requirements.txt
-cd ../../..
+.venv/bin/pip install -r sigma/requirements.txt
+cd ../..
 ```
 
 ### 3. Build
@@ -248,7 +247,7 @@ Add the following to `kibana.yml`:
 babel.sigmaApiUrl: "http://<sigma-api-host>:<port>/v1"
 
 # URL Kibana uses to call itself when deploying detection rules
-# Defaults to http://localhost:5601 — change if Kibana is behind a proxy or on a different host
+# Defaults to http://localhost:5601 for local testing — change if Kibana is behind a proxy or on a different host. Example is below:
 babel.kibanaUrl: "http://localhost:5601"
 ```
 
@@ -269,7 +268,12 @@ The plugin creates and uses two indices in your Elasticsearch cluster:
 | `babel_sigma_doc` | Rule library synced from GitHub repositories |
 | `babel_config` | Plugin settings (GitHub tokens, configured repos) |
 
-Both indices are bootstrapped automatically on first run. If your cluster has `action.auto_create_index: false`, create them manually before starting Kibana:
+Both indices are bootstrapped automatically on first run **when Kibana connects as a user with index-creation privileges**. Two cases require manual creation:
+
+- `action.auto_create_index: false` is set on the cluster
+- Kibana is configured to use the built-in `kibana_system` user (common with `elastic-start-local`), which does not have `indices:admin/create` permission
+
+In either case, create the indices with the `elastic` superuser before starting Kibana:
 
 ```bash
 curl -X PUT "http://localhost:9200/babel_config"
