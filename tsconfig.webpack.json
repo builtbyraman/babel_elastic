@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "noEmit": false,
+    "outDir": "./target/static"
+  },
+  "include": [
+    "public/**/*.ts",
+    "public/**/*.tsx",
+    "types/**/*.d.ts"
+  ]
+}

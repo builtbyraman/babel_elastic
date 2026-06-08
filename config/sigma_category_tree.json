@@ -1,0 +1,82 @@
+[
+    {
+        "id": "1",
+        "parent_id": "",
+        "name": "application"
+    },
+    {
+        "id": "2",
+        "parent_id": "",
+        "name": "apt"
+    },
+    {
+        "id": "3",
+        "parent_id": "",
+        "name": "linux"
+    },
+    {
+        "id": "4",
+        "parent_id": "",
+        "name": "network"
+    },
+    {
+        "id": "8",
+        "parent_id": "",
+        "name": "other"
+    },
+    {
+        "id": "5",
+        "parent_id": "",
+        "name": "proxy"
+    },
+    {
+        "id": "6",
+        "parent_id": "",
+        "name": "web"
+    },
+    {
+        "id": "7",
+        "parent_id": "",
+        "name": "windows"
+    },
+    {
+        "id": "9",
+        "parent_id": "3",
+        "name": "auditd"
+    },
+    {
+        "id": "10",
+        "parent_id": "3",
+        "name": "modsecurity"
+    },
+    {
+        "id": "11",
+        "parent_id": "7",
+        "name": "builtin"
+    },
+    {
+        "id": "12",
+        "parent_id": "7",
+        "name": "malware"
+    },
+    {
+        "id": "13",
+        "parent_id": "7",
+        "name": "other"
+    },
+    {
+        "id": "14",
+        "parent_id": "7",
+        "name": "powershell"
+    },
+    {
+        "id": "15",
+        "parent_id": "7",
+        "name": "sysmon"
+    },
+    {
+        "id": "16",
+        "parent_id": "15",
+        "name": "sysmon_child"
+    }
+]

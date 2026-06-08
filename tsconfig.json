@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "ES2019",
+    "module": "commonjs",
+    "lib": ["ES2019", "DOM"],
+    "types": ["node"],
+    "jsx": "react",
+    "strict": true,
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "declaration": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "outDir": "./target",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@kbn/core/server": ["./types/kbn__core__server"],
+      "@kbn/core/public": ["./types/kbn__core__public"],
+      "@kbn/config-schema": ["./types/kbn__config-schema"]
+    }
+  },
+  "include": [
+    "server/**/*.ts",
+    "public/**/*.ts",
+    "public/**/*.tsx",
+    "common/**/*.ts",
+    "types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "target",
+    "server/translation_script",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "test-mocks"
+  ]
+}
