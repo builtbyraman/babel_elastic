@@ -1,0 +1,141 @@
+Babel
+Copyright 2026 Arjun G. Raman
+
+This product is licensed under the Apache License, Version 2.0.
+You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+---
+
+This product includes or depends on the following third-party software.
+
+================================================================================
+pySigma
+================================================================================
+
+Version:  1.3.3
+Author:   Thomas Patzke
+Source:   https://github.com/SigmaHQ/pySigma
+License:  GNU Lesser General Public License v2.1 (LGPL-2.1-only)
+
+pySigma is the core Python library used by Babel to parse, validate, and convert
+SIGMA detection rules. It is invoked at runtime as a subprocess via
+server/translation_script/sigma/sigma_converter.py and is installed as a pip
+dependency — it is not statically linked or bundled into the Babel plugin itself.
+
+The full text of the LGPLv2.1 is available at:
+https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+
+In accordance with the LGPL, the source code of pySigma is available at the
+repository listed above. Babel does not modify pySigma.
+
+================================================================================
+pySigma-backend-elasticsearch
+================================================================================
+
+Version:  2.0.2
+Author:   Thomas Patzke
+Source:   https://github.com/SigmaHQ/pySigma-backend-elasticsearch
+License:  GNU Lesser General Public License v3.0 (LGPL-3.0-only)
+
+This package provides the Elasticsearch, EQL, ES|QL, Lucene, and ElastAlert
+backends used by pySigma when Babel converts SIGMA rules to Elastic-compatible
+query formats. It is installed as a pip dependency alongside pySigma.
+
+The full text of the LGPLv3.0 is available at:
+https://www.gnu.org/licenses/lgpl-3.0.html
+
+In accordance with the LGPL, the source code of this package is available at
+the repository listed above. Babel does not modify this package.
+
+================================================================================
+SIGMA (Detection Rule Format and Standard)
+================================================================================
+
+Authors:  Florian Roth, Thomas Patzke, and the SigmaHQ contributors
+Source:   https://github.com/SigmaHQ/sigma
+Website:  https://sigmahq.io
+
+Babel is built on and designed around the SIGMA open detection rule standard.
+The SIGMA specification and the reference rule sets are used to define the
+authoring format, field schema, and conversion targets within Babel.
+
+SIGMA rule content (the .yml rule files synced from GitHub repositories) is
+governed by the Detection Rule License (DRL) or the individual license of each
+contributing repository. Babel does not redistribute SIGMA rules; it fetches
+them from user-configured GitHub repositories at runtime.
+
+================================================================================
+Elastic UI Framework (EUI)
+================================================================================
+
+Version:  114.x
+Author:   Elastic NV
+Source:   https://github.com/elastic/eui
+License:  Dual — Server Side Public License v1 (SSPL) and Elastic License 2.0
+
+EUI provides the visual component library used to build the Babel user interface.
+It is bundled into the Babel plugin's client-side JavaScript bundle at build time.
+
+The Elastic License 2.0 permits use of EUI within Kibana plugins and internal
+deployments. It does not permit providing EUI or software derived from it as a
+third-party managed service. Full license texts:
+  SSPL:              https://www.mongodb.com/licensing/server-side-public-license
+  Elastic License 2: https://www.elastic.co/licensing/elastic-license
+
+================================================================================
+React
+================================================================================
+
+Version:  18.x
+Author:   Meta Platforms, Inc. and affiliates
+Source:   https://github.com/facebook/react
+License:  MIT
+
+Copyright (c) Meta Platforms, Inc. and affiliates.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+js-yaml
+================================================================================
+
+Version:  4.x
+Author:   Vitaly Puzrin
+Source:   https://github.com/nodeca/js-yaml
+License:  MIT
+
+Copyright (C) 2011-2015 by Vitaly Puzrin and all other contributors.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

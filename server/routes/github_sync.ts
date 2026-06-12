@@ -160,10 +160,10 @@ async function inBatches<T, R>(items: T[], size: number, fn: (item: T) => Promis
   return results;
 }
 
-export function registerTdmUpdateRoute(router: IRouter): void {
+export function registerGithubSyncRoute(router: IRouter): void {
   router.post(
     {
-      path: '/api/babel/tdm-api-update-sigma',
+      path: '/api/babel/sync',
       options: { access: 'public' },
       security: { authz: { enabled: false, reason: 'Authorization delegated to Elasticsearch via asCurrentUser' } },
       validate: {

@@ -39,7 +39,7 @@ Babel uses two different authz strategies depending on the route:
 **Detection rule deployment** (`POST /api/babel/deploy`)  
 The plugin forwards the caller's Kibana session credentials to the Kibana Detection Engine API, which enforces its own RBAC. A user without the Security → Detections `All` privilege will receive HTTP 403 from the Detection Engine. No privilege escalation is possible through this route.
 
-**Plugin settings and sync** (`POST /api/babel/repos`, `POST /api/babel/tdm-api-update-sigma`, `POST /api/babel/set-tdm-api-key`)  
+**Plugin settings and sync** (`POST /api/babel/repos`, `POST /api/babel/sync`, `POST /api/babel/set-github-token`)  
 These routes write to the `babel_config` Elasticsearch index using the caller's credentials (`asCurrentUser`). Access control depends on Elasticsearch index-level permissions for `babel_config`. In typical Kibana deployments, low-privilege roles do not have write access to arbitrary indices, so this implicit guard usually holds — but it is not explicitly auditable in the plugin itself.
 
 **Practical implication:** Any authenticated Kibana user whose ES credentials include write access to `babel_config` can modify plugin settings, register GitHub repos, and trigger syncs. Restrict this with the mitigations below.

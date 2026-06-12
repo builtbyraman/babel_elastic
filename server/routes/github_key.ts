@@ -9,10 +9,10 @@ function maskToken(token: string): string {
   return `${token.slice(0, 4)}****${token.slice(-4)}`;
 }
 
-export function registerTdmKeyRoutes(router: IRouter): void {
+export function registerGithubKeyRoutes(router: IRouter): void {
   router.post(
     {
-      path: '/api/babel/get-tdm-api-key',
+      path: '/api/babel/get-github-token',
       options: { access: 'public' },
       security: { authz: { enabled: false, reason: 'Authorization delegated to Elasticsearch via asCurrentUser' } },
       validate: false,
@@ -38,7 +38,7 @@ export function registerTdmKeyRoutes(router: IRouter): void {
 
   router.post(
     {
-      path: '/api/babel/set-tdm-api-key',
+      path: '/api/babel/set-github-token',
       options: { access: 'public' },
       security: { authz: { enabled: false, reason: 'Authorization delegated to Elasticsearch via asCurrentUser' } },
       validate: {

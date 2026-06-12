@@ -77,17 +77,17 @@ export function createApiService(http: HttpService) {
     },
 
     getGitHubToken() {
-      return http.post<GitHubTokenResult>(`${BASE}/get-tdm-api-key`);
+      return http.post<GitHubTokenResult>(`${BASE}/get-github-token`);
     },
 
     setGitHubToken(token: string) {
-      return http.post(`${BASE}/set-tdm-api-key`, {
+      return http.post(`${BASE}/set-github-token`, {
         body: JSON.stringify({ apiKey: token }),
       });
     },
 
     syncFromGitHub(options?: { githubToken?: string; category?: string; limit?: number }) {
-      return http.post<SyncResult>(`${BASE}/tdm-api-update-sigma`, {
+      return http.post<SyncResult>(`${BASE}/sync`, {
         body: JSON.stringify(options ?? {}),
       });
     },
