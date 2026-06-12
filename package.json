@@ -1,6 +1,6 @@
 {
   "name": "babel",
-  "version": "2.0.1",
+  "version": "1.0.3",
   "private": true,
   "license": "Apache-2.0",
   "description": "Babel — SIGMA rule editor and multi-SIEM converter",
