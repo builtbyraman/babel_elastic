@@ -30,7 +30,7 @@ function registerSigmaWatcherRoute(router) {
                 input: {
                     search: {
                         request: {
-                            indices: [indexId !== null && indexId !== void 0 ? indexId : '*'],
+                            indices: [indexId ?? '*'],
                             body: {
                                 query: {
                                     query_string: {

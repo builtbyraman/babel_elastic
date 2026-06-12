@@ -32,9 +32,8 @@ const PHASE_COLORS = {
 };
 function buildRuleYamls(docs) {
     return docs.map((doc) => {
-        var _a;
         const tags = Array.isArray(doc.tags) ? doc.tags : [];
-        const title = String((_a = doc.title) !== null && _a !== void 0 ? _a : 'Unknown').replace(/"/g, '\\"');
+        const title = String(doc.title ?? 'Unknown').replace(/"/g, '\\"');
         const irPhase = doc['x-ir-phase'] ? `x-ir-phase: ${doc['x-ir-phase']}\n` : '';
         const tagsSection = tags.length > 0
             ? `tags:\n${tags.map((t) => `  - ${String(t)}`).join('\n')}\n`
@@ -49,7 +48,6 @@ const IrReadinessPanel = ({ apiService }) => {
     const [error, setError] = (0, react_1.useState)(null);
     const [ruleCount, setRuleCount] = (0, react_1.useState)(0);
     const handleAnalyze = (0, react_1.useCallback)(async () => {
-        var _a, _b, _c, _d;
         if (!scenario)
             return;
         setIsLoading(true);
@@ -57,13 +55,13 @@ const IrReadinessPanel = ({ apiService }) => {
         setResult(null);
         try {
             const countRes = await apiService.searchRules({ size: 1 });
-            const total = (_b = (_a = countRes === null || countRes === void 0 ? void 0 : countRes.data) === null || _a === void 0 ? void 0 : _a.total) !== null && _b !== void 0 ? _b : 0;
+            const total = countRes?.data?.total ?? 0;
             if (total === 0) {
                 setError('No rules in library. Use Sync Rules to import rules first.');
                 return;
             }
             const res = await apiService.searchRules({ size: total });
-            const docs = (_d = (_c = res === null || res === void 0 ? void 0 : res.data) === null || _c === void 0 ? void 0 : _c.docs) !== null && _d !== void 0 ? _d : [];
+            const docs = res?.data?.docs ?? [];
             setRuleCount(total);
             const ruleYamls = buildRuleYamls(docs);
             const data = await apiService.irReadiness(scenario, ruleYamls);
@@ -84,13 +82,12 @@ const IrReadinessPanel = ({ apiService }) => {
                                             width: `${result.overall_technique_coverage_pct}%`,
                                             transition: 'width 0.4s',
                                         } }) }) }), (0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, style: { minWidth: 36 }, children: (0, jsx_runtime_1.jsxs)(eui_1.EuiText, { size: "xs", color: "subdued", children: [result.overall_technique_coverage_pct, "%"] }) })] }), (0, jsx_runtime_1.jsx)(eui_1.EuiSpacer, { size: "l" }), (0, jsx_runtime_1.jsx)(eui_1.EuiTitle, { size: "xs", children: (0, jsx_runtime_1.jsxs)("h3", { children: ["Phase-by-Phase Coverage \u2014 ", result.scenario_display] }) }), (0, jsx_runtime_1.jsx)(eui_1.EuiSpacer, { size: "m" }), (0, jsx_runtime_1.jsx)("div", { style: { display: 'flex', flexDirection: 'column', gap: 12 }, children: result.phases.map((phase) => {
-                            var _a, _b, _c;
                             const covered = phase.has_technique_coverage;
                             const phasePct = phase.technique_coverage_pct;
-                            const borderColor = covered ? (_a = PHASE_COLORS[phase.phase]) !== null && _a !== void 0 ? _a : '#017D73' : '#D3DAE6';
+                            const borderColor = covered ? PHASE_COLORS[phase.phase] ?? '#017D73' : '#D3DAE6';
                             const allRules = [...new Set([...phase.covering_rules, ...phase.tagged_rules])];
-                            return ((0, jsx_runtime_1.jsxs)(eui_1.EuiPanel, { hasBorder: true, paddingSize: "m", style: { borderLeft: `4px solid ${borderColor}` }, children: [(0, jsx_runtime_1.jsxs)(eui_1.EuiFlexGroup, { alignItems: "flexStart", gutterSize: "m", responsive: false, children: [(0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, style: { minWidth: 160 }, children: (0, jsx_runtime_1.jsxs)(eui_1.EuiFlexGroup, { gutterSize: "s", alignItems: "center", children: [(0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, children: (0, jsx_runtime_1.jsx)("span", { style: { fontSize: 20 }, children: (_b = PHASE_ICONS[phase.phase]) !== null && _b !== void 0 ? _b : '•' }) }), (0, jsx_runtime_1.jsxs)(eui_1.EuiFlexItem, { children: [(0, jsx_runtime_1.jsx)(eui_1.EuiText, { style: { fontWeight: 700, textTransform: 'capitalize', color: PHASE_COLORS[phase.phase] }, children: phase.phase.replace('-', '‑') }), (0, jsx_runtime_1.jsx)(eui_1.EuiText, { size: "xs", color: "subdued", children: phase.description })] })] }) }), (0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, style: { minWidth: 160 }, children: phase.expected_techniques.length > 0 ? ((0, jsx_runtime_1.jsxs)(jsx_runtime_1.Fragment, { children: [(0, jsx_runtime_1.jsxs)(eui_1.EuiText, { size: "xs", color: "subdued", style: { marginBottom: 4 }, children: [phase.covered_techniques.length, "/", phase.expected_techniques.length, " techniques \u00B7 ", phasePct, "%"] }), (0, jsx_runtime_1.jsx)("div", { style: { background: '#EBF0F5', borderRadius: 4, height: 8, width: 140 }, children: (0, jsx_runtime_1.jsx)("div", { style: {
-                                                                    background: covered ? ((_c = PHASE_COLORS[phase.phase]) !== null && _c !== void 0 ? _c : '#017D73') : '#D3DAE6',
+                            return ((0, jsx_runtime_1.jsxs)(eui_1.EuiPanel, { hasBorder: true, paddingSize: "m", style: { borderLeft: `4px solid ${borderColor}` }, children: [(0, jsx_runtime_1.jsxs)(eui_1.EuiFlexGroup, { alignItems: "flexStart", gutterSize: "m", responsive: false, children: [(0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, style: { minWidth: 160 }, children: (0, jsx_runtime_1.jsxs)(eui_1.EuiFlexGroup, { gutterSize: "s", alignItems: "center", children: [(0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, children: (0, jsx_runtime_1.jsx)("span", { style: { fontSize: 20 }, children: PHASE_ICONS[phase.phase] ?? '•' }) }), (0, jsx_runtime_1.jsxs)(eui_1.EuiFlexItem, { children: [(0, jsx_runtime_1.jsx)(eui_1.EuiText, { style: { fontWeight: 700, textTransform: 'capitalize', color: PHASE_COLORS[phase.phase] }, children: phase.phase.replace('-', '‑') }), (0, jsx_runtime_1.jsx)(eui_1.EuiText, { size: "xs", color: "subdued", children: phase.description })] })] }) }), (0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, style: { minWidth: 160 }, children: phase.expected_techniques.length > 0 ? ((0, jsx_runtime_1.jsxs)(jsx_runtime_1.Fragment, { children: [(0, jsx_runtime_1.jsxs)(eui_1.EuiText, { size: "xs", color: "subdued", style: { marginBottom: 4 }, children: [phase.covered_techniques.length, "/", phase.expected_techniques.length, " techniques \u00B7 ", phasePct, "%"] }), (0, jsx_runtime_1.jsx)("div", { style: { background: '#EBF0F5', borderRadius: 4, height: 8, width: 140 }, children: (0, jsx_runtime_1.jsx)("div", { style: {
+                                                                    background: covered ? (PHASE_COLORS[phase.phase] ?? '#017D73') : '#D3DAE6',
                                                                     borderRadius: 4, height: 8,
                                                                     width: `${phasePct}%`,
                                                                 } }) })] })) : ((0, jsx_runtime_1.jsx)(eui_1.EuiText, { size: "xs", color: "subdued", children: "No specific techniques defined" })) }), (0, jsx_runtime_1.jsxs)(eui_1.EuiFlexItem, { children: [phase.covered_techniques.length > 0 && ((0, jsx_runtime_1.jsxs)("div", { children: [(0, jsx_runtime_1.jsx)(eui_1.EuiText, { size: "xs", color: "subdued", style: { marginBottom: 2 }, children: "Covered" }), (0, jsx_runtime_1.jsx)(eui_1.EuiFlexGroup, { gutterSize: "xs", wrap: true, children: phase.covered_techniques.map(t => ((0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, children: (0, jsx_runtime_1.jsx)(eui_1.EuiBadge, { color: "success", children: t }) }, t))) })] })), phase.missing_techniques.length > 0 && ((0, jsx_runtime_1.jsxs)(jsx_runtime_1.Fragment, { children: [phase.covered_techniques.length > 0 && (0, jsx_runtime_1.jsx)(eui_1.EuiSpacer, { size: "xs" }), (0, jsx_runtime_1.jsx)(eui_1.EuiText, { size: "xs", color: "subdued", style: { marginBottom: 2 }, children: "Missing" }), (0, jsx_runtime_1.jsx)(eui_1.EuiFlexGroup, { gutterSize: "xs", wrap: true, children: phase.missing_techniques.map(t => ((0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, children: (0, jsx_runtime_1.jsx)(eui_1.EuiBadge, { color: "danger", children: t }) }, t))) })] })), phase.expected_techniques.length === 0 && ((0, jsx_runtime_1.jsx)(eui_1.EuiText, { size: "xs", color: "subdued", children: phase.notes }))] }), (0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, style: { minWidth: 200 }, children: allRules.length > 0 ? ((0, jsx_runtime_1.jsxs)(jsx_runtime_1.Fragment, { children: [(0, jsx_runtime_1.jsxs)(eui_1.EuiText, { size: "xs", color: "subdued", style: { marginBottom: 2 }, children: [allRules.length, " rule", allRules.length > 1 ? 's' : ''] }), allRules.slice(0, 4).map(r => ((0, jsx_runtime_1.jsxs)(eui_1.EuiText, { size: "xs", style: { marginBottom: 1 }, children: ["\u2022 ", r] }, r))), allRules.length > 4 && ((0, jsx_runtime_1.jsxs)(eui_1.EuiText, { size: "xs", color: "subdued", children: ["+", allRules.length - 4, " more"] }))] })) : ((0, jsx_runtime_1.jsx)(eui_1.EuiBadge, { color: "warning", iconType: "alert", children: "No rules" })) })] }), phase.notes && ((0, jsx_runtime_1.jsxs)(jsx_runtime_1.Fragment, { children: [(0, jsx_runtime_1.jsx)(eui_1.EuiHorizontalRule, { margin: "xs" }), (0, jsx_runtime_1.jsx)(eui_1.EuiText, { size: "xs", color: "subdued", children: phase.notes })] }))] }, phase.phase));

@@ -16,7 +16,6 @@ function registerSigmaEffectivenessRoutes(router, config) {
             body: config_schema_1.schema.object({ ruleYaml: config_schema_1.schema.string() }),
         },
     }, async (_ctx, request, response) => {
-        var _a;
         const { ruleYaml } = request.body;
         try {
             const res = await fetch(`${SIGMA_API_URL}/rules/quality`, {
@@ -25,7 +24,7 @@ function registerSigmaEffectivenessRoutes(router, config) {
                 body: JSON.stringify({ rule_yaml: ruleYaml }),
             });
             const body = await res.json().catch(() => null);
-            return res.ok ? response.ok({ body }) : response.customError({ statusCode: res.status, body: { message: (_a = body === null || body === void 0 ? void 0 : body.detail) !== null && _a !== void 0 ? _a : 'Quality score failed' } });
+            return res.ok ? response.ok({ body }) : response.customError({ statusCode: res.status, body: { message: body?.detail ?? 'Quality score failed' } });
         }
         catch (err) {
             const _msg = err instanceof Error ? err.message : 'Quality score failed';

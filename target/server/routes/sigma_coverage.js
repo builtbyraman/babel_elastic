@@ -15,7 +15,6 @@ function registerSigmaCoverageRoute(router, config) {
             }),
         },
     }, async (_context, request, response) => {
-        var _a;
         const { ruleYamls } = request.body;
         const authHeader = SIGMA_API_KEY ? `Bearer ${SIGMA_API_KEY}` : '';
         try {
@@ -31,7 +30,7 @@ function registerSigmaCoverageRoute(router, config) {
             if (!fetchRes.ok) {
                 return response.customError({
                     statusCode: fetchRes.status,
-                    body: { message: (_a = payload === null || payload === void 0 ? void 0 : payload.detail) !== null && _a !== void 0 ? _a : 'Navigator export failed' },
+                    body: { message: payload?.detail ?? 'Navigator export failed' },
                 });
             }
             return response.ok({ body: payload });
@@ -53,7 +52,6 @@ function registerSigmaCoverageRoute(router, config) {
             }),
         },
     }, async (_context, request, response) => {
-        var _a;
         const { ruleYamls } = request.body;
         const authHeader = SIGMA_API_KEY ? `Bearer ${SIGMA_API_KEY}` : '';
         try {
@@ -69,7 +67,7 @@ function registerSigmaCoverageRoute(router, config) {
             if (!fetchRes.ok) {
                 return response.customError({
                     statusCode: fetchRes.status,
-                    body: { message: (_a = payload === null || payload === void 0 ? void 0 : payload.detail) !== null && _a !== void 0 ? _a : 'Coverage computation failed' },
+                    body: { message: payload?.detail ?? 'Coverage computation failed' },
                 });
             }
             return response.ok({ body: payload });

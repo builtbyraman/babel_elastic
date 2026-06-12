@@ -19,7 +19,6 @@ function registerSigmaIrReadinessRoutes(router, config) {
             }),
         },
     }, async (_ctx, request, response) => {
-        var _a;
         const { scenario, ruleYamls } = request.body;
         try {
             const res = await fetch(`${SIGMA_API_URL}/ir-readiness`, {
@@ -30,7 +29,7 @@ function registerSigmaIrReadinessRoutes(router, config) {
             const body = await res.json().catch(() => null);
             return res.ok
                 ? response.ok({ body })
-                : response.customError({ statusCode: res.status, body: { message: (_a = body === null || body === void 0 ? void 0 : body.detail) !== null && _a !== void 0 ? _a : 'IR readiness failed' } });
+                : response.customError({ statusCode: res.status, body: { message: body?.detail ?? 'IR readiness failed' } });
         }
         catch (err) {
             const _msg = err instanceof Error ? err.message : 'IR readiness failed';

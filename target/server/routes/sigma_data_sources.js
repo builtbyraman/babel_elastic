@@ -32,7 +32,6 @@ function registerSigmaDataSourcesRoute(router) {
         security: { authz: { enabled: false, reason: 'Index introspection for logsource mapping; uses asCurrentUser' } },
         validate: false,
     }, async (context, _request, response) => {
-        var _a, _b;
         const { elasticsearch } = await context.core;
         const client = elasticsearch.client.asCurrentUser;
         try {
@@ -43,10 +42,10 @@ function registerSigmaDataSourcesRoute(router) {
             });
             const byProduct = {};
             for (const row of cats) {
-                const indexName = (_a = row.index) !== null && _a !== void 0 ? _a : '';
+                const indexName = row.index ?? '';
                 if (indexName.startsWith('.') && !indexName.startsWith('.alerts') && !indexName.startsWith('.siem'))
                     continue;
-                const docs = parseInt((_b = row['docs.count']) !== null && _b !== void 0 ? _b : '0', 10) || 0;
+                const docs = parseInt(row['docs.count'] ?? '0', 10) || 0;
                 for (const entry of INDEX_PRODUCT_MAP) {
                     if (entry.pattern.test(indexName)) {
                         if (!byProduct[entry.product]) {
@@ -60,16 +59,15 @@ function registerSigmaDataSourcesRoute(router) {
                 }
             }
             const sources = KNOWN_PRODUCTS.map(product => {
-                var _a, _b, _c, _d;
                 const found = byProduct[product];
                 const entry = INDEX_PRODUCT_MAP.find(e => e.product === product);
                 return {
                     product,
-                    label: (_a = entry === null || entry === void 0 ? void 0 : entry.label) !== null && _a !== void 0 ? _a : product,
+                    label: entry?.label ?? product,
                     available: !!found && found.docs > 0,
-                    index_count: (_b = found === null || found === void 0 ? void 0 : found.indices.length) !== null && _b !== void 0 ? _b : 0,
-                    doc_count: (_c = found === null || found === void 0 ? void 0 : found.docs) !== null && _c !== void 0 ? _c : 0,
-                    indices: (_d = found === null || found === void 0 ? void 0 : found.indices.slice(0, 5)) !== null && _d !== void 0 ? _d : [],
+                    index_count: found?.indices.length ?? 0,
+                    doc_count: found?.docs ?? 0,
+                    indices: found?.indices.slice(0, 5) ?? [],
                     categories: found ? [...found.categories] : [],
                 };
             });

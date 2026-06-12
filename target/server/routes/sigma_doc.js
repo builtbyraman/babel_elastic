@@ -19,7 +19,6 @@ function registerSigmaDocRoute(router) {
             }),
         },
     }, async (context, request, response) => {
-        var _a, _b, _c;
         const { search, category, mitre, irPhase, from = 0, size = 20 } = request.query;
         const { elasticsearch } = await context.core;
         const client = elasticsearch.client.asCurrentUser;
@@ -59,7 +58,7 @@ function registerSigmaDocRoute(router) {
                 body: {
                     success: true,
                     data: {
-                        total: (_c = (_b = (_a = hits.total) === null || _a === void 0 ? void 0 : _a.value) !== null && _b !== void 0 ? _b : hits.total) !== null && _c !== void 0 ? _c : 0,
+                        total: hits.total?.value ?? hits.total ?? 0,
                         docs: hits.hits.map((h) => ({ id: h._id, ...h._source })),
                     },
                 },

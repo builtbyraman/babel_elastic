@@ -18,7 +18,6 @@ function registerSigmaFieldsRoutes(router, config) {
             }),
         },
     }, async (_context, request, response) => {
-        var _a;
         const category = request.query.category;
         const url = category
             ? `${SIGMA_API_URL}/fields?category=${encodeURIComponent(category)}`
@@ -27,7 +26,7 @@ function registerSigmaFieldsRoutes(router, config) {
             const fetchRes = await fetch(url, { headers: { ...authHeaders() } });
             const payload = await fetchRes.json().catch(() => null);
             if (!fetchRes.ok) {
-                return response.customError({ statusCode: fetchRes.status, body: { message: (_a = payload === null || payload === void 0 ? void 0 : payload.detail) !== null && _a !== void 0 ? _a : 'Fields fetch failed' } });
+                return response.customError({ statusCode: fetchRes.status, body: { message: payload?.detail ?? 'Fields fetch failed' } });
             }
             return response.ok({ body: payload });
         }
@@ -48,7 +47,6 @@ function registerSigmaFieldsRoutes(router, config) {
             }),
         },
     }, async (_context, request, response) => {
-        var _a;
         const { sigmaField } = request.body;
         try {
             const fetchRes = await fetch(`${SIGMA_API_URL}/fields/suggest`, {
@@ -58,7 +56,7 @@ function registerSigmaFieldsRoutes(router, config) {
             });
             const payload = await fetchRes.json().catch(() => null);
             if (!fetchRes.ok) {
-                return response.customError({ statusCode: fetchRes.status, body: { message: (_a = payload === null || payload === void 0 ? void 0 : payload.detail) !== null && _a !== void 0 ? _a : 'Suggest failed' } });
+                return response.customError({ statusCode: fetchRes.status, body: { message: payload?.detail ?? 'Suggest failed' } });
             }
             return response.ok({ body: payload });
         }

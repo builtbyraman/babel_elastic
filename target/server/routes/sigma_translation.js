@@ -17,7 +17,6 @@ function registerSigmaTranslationRoute(router, config) {
             }),
         },
     }, async (_context, request, response) => {
-        var _a;
         const { sigmaText, siemTo, pipeline = 'ecs_windows' } = request.query;
         let sigmaYaml;
         try {
@@ -41,7 +40,7 @@ function registerSigmaTranslationRoute(router, config) {
                 const message = payload && payload.detail ? payload.detail : `Conversion failed: ${fetchRes.status}`;
                 return response.customError({ statusCode: fetchRes.status, body: { message } });
             }
-            const translated = (_a = payload === null || payload === void 0 ? void 0 : payload.query_result) !== null && _a !== void 0 ? _a : '';
+            const translated = payload?.query_result ?? '';
             return response.ok({ body: { success: true, data: { translation: Buffer.from(translated).toString('base64') } } });
         }
         catch (err) {

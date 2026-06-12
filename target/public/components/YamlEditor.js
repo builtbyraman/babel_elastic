@@ -5,7 +5,6 @@ const jsx_runtime_1 = require("react/jsx-runtime");
 const react_1 = require("react");
 const eui_1 = require("@elastic/eui");
 const YamlEditor = ({ value, onChange, parseError, apiService }) => {
-    var _a, _b;
     const handleChange = (0, react_1.useCallback)((e) => onChange(e.target.value), [onChange]);
     const textareaRef = (0, react_1.useRef)(null);
     const gutterRef = (0, react_1.useRef)(null);
@@ -17,7 +16,7 @@ const YamlEditor = ({ value, onChange, parseError, apiService }) => {
     const lineCount = value ? value.split('\n').length : 1;
     const digitCount = Math.max(String(lineCount).length, 2);
     const errorLine = parseError
-        ? parseInt((_b = ((_a = parseError.match(/\((\d+):\d+\)/)) !== null && _a !== void 0 ? _a : [])[1]) !== null && _b !== void 0 ? _b : '0', 10)
+        ? parseInt((parseError.match(/\((\d+):\d+\)/) ?? [])[1] ?? '0', 10)
         : 0;
     const [validating, setValidating] = (0, react_1.useState)(false);
     const [issues, setIssues] = (0, react_1.useState)([]);
@@ -29,13 +28,12 @@ const YamlEditor = ({ value, onChange, parseError, apiService }) => {
         setQuality(null);
     }, [value]);
     const handleValidate = (0, react_1.useCallback)(async () => {
-        var _a;
         if (!apiService)
             return;
         setValidating(true);
         try {
             const result = await apiService.validateRule(value);
-            setIssues((_a = result.issues) !== null && _a !== void 0 ? _a : []);
+            setIssues(result.issues ?? []);
             setValidated(true);
             apiService.getRuleQuality(value).then((q) => setQuality(q)).catch(() => { });
         }

@@ -4,9 +4,8 @@ exports.getAutoPipeline = getAutoPipeline;
 exports.useConversion = useConversion;
 const react_1 = require("react");
 function getAutoPipeline(logsource) {
-    var _a, _b;
-    const product = ((_a = logsource === null || logsource === void 0 ? void 0 : logsource.product) !== null && _a !== void 0 ? _a : '').toLowerCase();
-    const category = ((_b = logsource === null || logsource === void 0 ? void 0 : logsource.category) !== null && _b !== void 0 ? _b : '').toLowerCase();
+    const product = (logsource?.product ?? '').toLowerCase();
+    const category = (logsource?.category ?? '').toLowerCase();
     if (product === 'windows')
         return 'ecs_windows';
     if (product === 'linux')
@@ -40,15 +39,14 @@ function useConversion(yaml, rule, format, apiService) {
         if (timerRef.current)
             clearTimeout(timerRef.current);
         timerRef.current = setTimeout(async () => {
-            var _a;
             setState(s => ({ ...s, isConverting: true, error: null, pipeline }));
             try {
                 const res = await apiService.translateRule(yaml, format, pipeline);
-                if (res.success && ((_a = res.data) === null || _a === void 0 ? void 0 : _a.translation)) {
+                if (res.success && res.data?.translation) {
                     setState({ result: decodeBase64(res.data.translation), error: null, isConverting: false, pipeline });
                 }
                 else {
-                    setState(s => { var _a; return ({ ...s, result: null, error: (_a = res.message) !== null && _a !== void 0 ? _a : 'Conversion returned no output', isConverting: false, pipeline }); });
+                    setState(s => ({ ...s, result: null, error: res.message ?? 'Conversion returned no output', isConverting: false, pipeline }));
                 }
             }
             catch (e) {

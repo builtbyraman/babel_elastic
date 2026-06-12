@@ -86,7 +86,6 @@ function registerSigmaDeployRoute(router, config) {
             }),
         },
     }, async (_context, request, response) => {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
         const { ruleYaml, format, pipeline, schedule, enabled } = request.body;
         const ruleType = FORMAT_TO_RULE_TYPE[format];
         if (!ruleType) {
@@ -108,10 +107,10 @@ function registerSigmaDeployRoute(router, config) {
             });
             const convPayload = await convRes.json().catch(() => null);
             if (!convRes.ok) {
-                const msg = (_a = convPayload === null || convPayload === void 0 ? void 0 : convPayload.detail) !== null && _a !== void 0 ? _a : `Conversion failed: ${convRes.status}`;
+                const msg = convPayload?.detail ?? `Conversion failed: ${convRes.status}`;
                 return response.customError({ statusCode: convRes.status, body: { message: msg } });
             }
-            query = (_b = convPayload === null || convPayload === void 0 ? void 0 : convPayload.query_result) !== null && _b !== void 0 ? _b : '';
+            query = convPayload?.query_result ?? '';
         }
         catch (err) {
             const _msg = err instanceof Error ? err.message : String(err);
@@ -121,17 +120,17 @@ function registerSigmaDeployRoute(router, config) {
         }
         try {
             const jsYaml = await Promise.resolve().then(() => __importStar(require('js-yaml')));
-            parsedRule = (_c = jsYaml.load(ruleYaml)) !== null && _c !== void 0 ? _c : {};
+            parsedRule = jsYaml.load(ruleYaml) ?? {};
         }
         catch {
             // Non-fatal — use defaults
         }
-        const title = (_d = parsedRule.title) !== null && _d !== void 0 ? _d : 'Sigma Rule';
-        const description = (_e = parsedRule.description) !== null && _e !== void 0 ? _e : 'Converted from Sigma rule';
-        const level = ((_f = parsedRule.level) !== null && _f !== void 0 ? _f : 'medium').toLowerCase();
-        const tags = (_g = parsedRule.tags) !== null && _g !== void 0 ? _g : [];
-        const references = (_h = parsedRule.references) !== null && _h !== void 0 ? _h : [];
-        const { severity, risk_score } = (_j = SEVERITY_MAP[level]) !== null && _j !== void 0 ? _j : SEVERITY_MAP.medium;
+        const title = parsedRule.title ?? 'Sigma Rule';
+        const description = parsedRule.description ?? 'Converted from Sigma rule';
+        const level = (parsedRule.level ?? 'medium').toLowerCase();
+        const tags = parsedRule.tags ?? [];
+        const references = parsedRule.references ?? [];
+        const { severity, risk_score } = SEVERITY_MAP[level] ?? SEVERITY_MAP.medium;
         const detectionRule = {
             name: title,
             description,
@@ -141,7 +140,7 @@ function registerSigmaDeployRoute(router, config) {
             language: ruleType.language,
             query,
             enabled,
-            interval: schedule !== null && schedule !== void 0 ? schedule : '5m',
+            interval: schedule ?? '5m',
             from: 'now-360s',
             max_signals: 100,
             tags: tags.filter(t => !t.startsWith('attack.')),
@@ -169,10 +168,10 @@ function registerSigmaDeployRoute(router, config) {
             });
             const deployPayload = await deployRes.json().catch(() => null);
             if (!deployRes.ok) {
-                const msg = (_k = deployPayload === null || deployPayload === void 0 ? void 0 : deployPayload.message) !== null && _k !== void 0 ? _k : `Deploy failed: ${deployRes.status}`;
+                const msg = deployPayload?.message ?? `Deploy failed: ${deployRes.status}`;
                 return response.customError({ statusCode: deployRes.status, body: { message: msg } });
             }
-            if (deployPayload === null || deployPayload === void 0 ? void 0 : deployPayload.id) {
+            if (deployPayload?.id) {
                 fetch(`${SIGMA_API_URL}/rules/register`, {
                     method: 'POST',
                     headers: {
@@ -190,10 +189,10 @@ function registerSigmaDeployRoute(router, config) {
                 body: {
                     success: true,
                     data: {
-                        rule_id: deployPayload === null || deployPayload === void 0 ? void 0 : deployPayload.id,
-                        name: deployPayload === null || deployPayload === void 0 ? void 0 : deployPayload.name,
-                        enabled: deployPayload === null || deployPayload === void 0 ? void 0 : deployPayload.enabled,
-                        created_at: deployPayload === null || deployPayload === void 0 ? void 0 : deployPayload.created_at,
+                        rule_id: deployPayload?.id,
+                        name: deployPayload?.name,
+                        enabled: deployPayload?.enabled,
+                        created_at: deployPayload?.created_at,
                     },
                 },
             });

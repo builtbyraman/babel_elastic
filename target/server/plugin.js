@@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BabelPlugin = void 0;
 const routes_1 = require("./routes");
 class BabelPlugin {
+    logger;
+    initializerContext;
     constructor(initializerContext) {
         this.logger = initializerContext.logger.get();
         this.initializerContext = initializerContext;
@@ -22,7 +24,7 @@ class BabelPlugin {
                         kibanaUrl = v.kibanaUrl;
                 });
             }
-            else if (cfg === null || cfg === void 0 ? void 0 : cfg.sigmaApiUrl) {
+            else if (cfg?.sigmaApiUrl) {
                 sigmaApiUrl = cfg.sigmaApiUrl;
                 kibanaUrl = cfg.kibanaUrl || kibanaUrl;
             }

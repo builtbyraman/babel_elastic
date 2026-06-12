@@ -22,16 +22,16 @@ function createApiService(http) {
             });
         },
         getGitHubToken() {
-            return http.post(`${BASE}/get-tdm-api-key`);
+            return http.post(`${BASE}/get-github-token`);
         },
         setGitHubToken(token) {
-            return http.post(`${BASE}/set-tdm-api-key`, {
+            return http.post(`${BASE}/set-github-token`, {
                 body: JSON.stringify({ apiKey: token }),
             });
         },
         syncFromGitHub(options) {
-            return http.post(`${BASE}/tdm-api-update-sigma`, {
-                body: JSON.stringify(options !== null && options !== void 0 ? options : {}),
+            return http.post(`${BASE}/sync`, {
+                body: JSON.stringify(options ?? {}),
             });
         },
         getRepos() {
@@ -43,26 +43,24 @@ function createApiService(http) {
             });
         },
         testRule(params) {
-            var _a, _b, _c, _d;
             return http.post(`${BASE}/test-run`, {
                 body: JSON.stringify({
                     ruleYaml: params.ruleYaml,
-                    indexPattern: (_a = params.indexPattern) !== null && _a !== void 0 ? _a : '*',
-                    timeframeHours: (_b = params.timeframeHours) !== null && _b !== void 0 ? _b : 24,
-                    pipeline: (_c = params.pipeline) !== null && _c !== void 0 ? _c : 'ecs_windows',
-                    queryFormat: (_d = params.queryFormat) !== null && _d !== void 0 ? _d : 'eql',
+                    indexPattern: params.indexPattern ?? '*',
+                    timeframeHours: params.timeframeHours ?? 24,
+                    pipeline: params.pipeline ?? 'ecs_windows',
+                    queryFormat: params.queryFormat ?? 'eql',
                 }),
             });
         },
         deployRule(params) {
-            var _a;
             return http.post(`${BASE}/deploy`, {
                 body: JSON.stringify({
                     ruleYaml: params.ruleYaml,
                     format: params.format,
                     pipeline: params.pipeline,
                     schedule: params.schedule,
-                    enabled: (_a = params.enabled) !== null && _a !== void 0 ? _a : false,
+                    enabled: params.enabled ?? false,
                 }),
             });
         },

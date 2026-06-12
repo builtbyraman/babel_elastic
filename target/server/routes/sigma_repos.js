@@ -12,18 +12,17 @@ function registerSigmaReposRoutes(router) {
         security: { authz: { enabled: false, reason: 'Config read via asCurrentUser' } },
         validate: false,
     }, async (context, _req, response) => {
-        var _a, _b, _c;
         const { elasticsearch } = await context.core;
         const client = elasticsearch.client.asCurrentUser;
         try {
             const doc = await client.get({ index: CONFIG_INDEX, id: REPOS_DOC_ID });
-            return response.ok({ body: { success: true, data: { repos: (_b = (_a = doc._source) === null || _a === void 0 ? void 0 : _a.repos) !== null && _b !== void 0 ? _b : [] } } });
+            return response.ok({ body: { success: true, data: { repos: doc._source?.repos ?? [] } } });
         }
         catch (err) {
-            if ((err === null || err === void 0 ? void 0 : err.statusCode) === 404) {
+            if (err?.statusCode === 404) {
                 return response.ok({ body: { success: true, data: { repos: [] } } });
             }
-            return response.internalError({ body: { message: (_c = err === null || err === void 0 ? void 0 : err.message) !== null && _c !== void 0 ? _c : 'Failed to load repos' } });
+            return response.internalError({ body: { message: err?.message ?? 'Failed to load repos' } });
         }
     });
     // POST /api/babel/repos
@@ -44,7 +43,6 @@ function registerSigmaReposRoutes(router) {
             }),
         },
     }, async (context, request, response) => {
-        var _a;
         const { elasticsearch } = await context.core;
         const client = elasticsearch.client.asCurrentUser;
         const { repos } = request.body;
@@ -58,7 +56,7 @@ function registerSigmaReposRoutes(router) {
             return response.ok({ body: { success: true } });
         }
         catch (err) {
-            return response.internalError({ body: { message: (_a = err === null || err === void 0 ? void 0 : err.message) !== null && _a !== void 0 ? _a : 'Failed to save repos' } });
+            return response.internalError({ body: { message: err?.message ?? 'Failed to save repos' } });
         }
     });
 }

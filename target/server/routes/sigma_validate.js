@@ -15,7 +15,6 @@ function registerSigmaValidateRoute(router, config) {
             }),
         },
     }, async (_context, request, response) => {
-        var _a;
         const { ruleYaml } = request.body;
         const authHeader = SIGMA_API_KEY ? `Bearer ${SIGMA_API_KEY}` : '';
         try {
@@ -29,7 +28,7 @@ function registerSigmaValidateRoute(router, config) {
             });
             const payload = await fetchRes.json().catch(() => null);
             if (!fetchRes.ok) {
-                return response.customError({ statusCode: fetchRes.status, body: { message: (_a = payload === null || payload === void 0 ? void 0 : payload.detail) !== null && _a !== void 0 ? _a : 'Validation failed' } });
+                return response.customError({ statusCode: fetchRes.status, body: { message: payload?.detail ?? 'Validation failed' } });
             }
             return response.ok({ body: payload });
         }

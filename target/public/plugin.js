@@ -35,10 +35,8 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BabelPublicPlugin = void 0;
 class BabelPublicPlugin {
-    constructor() {
-        // Populated in start() before any mount() can be called
-        this.services = null;
-    }
+    // Populated in start() before any mount() can be called
+    services = null;
     setup(core) {
         const getServices = () => this.services;
         core.application.register({

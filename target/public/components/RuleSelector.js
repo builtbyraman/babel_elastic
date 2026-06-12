@@ -150,15 +150,14 @@ const RuleSelector = ({ onClose, onSelect, apiService }) => {
         {
             field: 'title',
             name: 'Title',
-            render: (title, doc) => ((0, jsx_runtime_1.jsxs)("div", { children: [(0, jsx_runtime_1.jsx)(eui_1.EuiButtonEmpty, { size: "xs", flush: "left", onClick: () => handleSelect(doc), children: String(title !== null && title !== void 0 ? title : '(untitled)') }), (() => {
-                        var _a;
+            render: (title, doc) => ((0, jsx_runtime_1.jsxs)("div", { children: [(0, jsx_runtime_1.jsx)(eui_1.EuiButtonEmpty, { size: "xs", flush: "left", onClick: () => handleSelect(doc), children: String(title ?? '(untitled)') }), (() => {
                         const { techniques } = parseMitre(doc.tags);
                         const irPhase = doc['x-ir-phase'];
                         if (techniques.length === 0 && !irPhase)
                             return null;
                         const shown = techniques.slice(0, 3);
                         const extra = techniques.length - shown.length;
-                        return ((0, jsx_runtime_1.jsxs)("div", { style: { paddingLeft: 8, paddingBottom: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }, children: [shown.map(t => ((0, jsx_runtime_1.jsx)(eui_1.EuiBadge, { color: "hollow", style: { marginRight: 2, fontSize: '0.65rem' }, children: t }, t))), extra > 0 && (0, jsx_runtime_1.jsxs)(eui_1.EuiBadge, { color: "hollow", style: { fontSize: '0.65rem' }, children: ["+", extra] }), irPhase && ((0, jsx_runtime_1.jsx)(eui_1.EuiBadge, { style: { backgroundColor: (_a = IR_PHASE_COLORS[irPhase]) !== null && _a !== void 0 ? _a : '#636e72', color: '#fff', fontSize: '0.62rem' }, children: irPhase }))] }));
+                        return ((0, jsx_runtime_1.jsxs)("div", { style: { paddingLeft: 8, paddingBottom: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }, children: [shown.map(t => ((0, jsx_runtime_1.jsx)(eui_1.EuiBadge, { color: "hollow", style: { marginRight: 2, fontSize: '0.65rem' }, children: t }, t))), extra > 0 && (0, jsx_runtime_1.jsxs)(eui_1.EuiBadge, { color: "hollow", style: { fontSize: '0.65rem' }, children: ["+", extra] }), irPhase && ((0, jsx_runtime_1.jsx)(eui_1.EuiBadge, { style: { backgroundColor: IR_PHASE_COLORS[irPhase] ?? '#636e72', color: '#fff', fontSize: '0.62rem' }, children: irPhase }))] }));
                     })()] })),
         },
         {
@@ -169,24 +168,18 @@ const RuleSelector = ({ onClose, onSelect, apiService }) => {
                 const { tactics } = parseMitre(tags);
                 if (tactics.length === 0)
                     return (0, jsx_runtime_1.jsx)(eui_1.EuiText, { size: "xs", color: "subdued", children: "\u2014" });
-                return ((0, jsx_runtime_1.jsxs)("div", { style: { display: 'flex', flexWrap: 'wrap', gap: 2 }, children: [tactics.slice(0, 2).map(t => {
-                            var _a;
-                            return ((0, jsx_runtime_1.jsx)(eui_1.EuiBadge, { style: {
-                                    backgroundColor: (_a = TACTIC_COLORS[t]) !== null && _a !== void 0 ? _a : '#b2bec3',
-                                    color: '#fff',
-                                    fontSize: '0.62rem',
-                                }, children: TACTIC_LABELS[t] }, t));
-                        }), tactics.length > 2 && ((0, jsx_runtime_1.jsxs)(eui_1.EuiBadge, { color: "hollow", style: { fontSize: '0.62rem' }, children: ["+", tactics.length - 2] }))] }));
+                return ((0, jsx_runtime_1.jsxs)("div", { style: { display: 'flex', flexWrap: 'wrap', gap: 2 }, children: [tactics.slice(0, 2).map(t => ((0, jsx_runtime_1.jsx)(eui_1.EuiBadge, { style: {
+                                backgroundColor: TACTIC_COLORS[t] ?? '#b2bec3',
+                                color: '#fff',
+                                fontSize: '0.62rem',
+                            }, children: TACTIC_LABELS[t] }, t))), tactics.length > 2 && ((0, jsx_runtime_1.jsxs)(eui_1.EuiBadge, { color: "hollow", style: { fontSize: '0.62rem' }, children: ["+", tactics.length - 2] }))] }));
             },
         },
         {
             field: 'level',
             name: 'Severity',
             width: '80px',
-            render: (level) => {
-                var _a;
-                return level ? ((0, jsx_runtime_1.jsx)(eui_1.EuiBadge, { color: ((_a = LEVEL_COLORS[String(level)]) !== null && _a !== void 0 ? _a : 'default'), children: String(level) })) : null;
-            },
+            render: (level) => level ? ((0, jsx_runtime_1.jsx)(eui_1.EuiBadge, { color: (LEVEL_COLORS[String(level)] ?? 'default'), children: String(level) })) : null,
         },
     ];
     return ((0, jsx_runtime_1.jsxs)(eui_1.EuiFlyout, { onClose: onClose, size: "l", "aria-labelledby": "ruleSelectorTitle", children: [(0, jsx_runtime_1.jsx)(eui_1.EuiFlyoutHeader, { hasBorder: true, children: (0, jsx_runtime_1.jsx)(eui_1.EuiTitle, { size: "m", children: (0, jsx_runtime_1.jsx)("h2", { id: "ruleSelectorTitle", children: "Select Rule" }) }) }), (0, jsx_runtime_1.jsxs)(eui_1.EuiFlyoutBody, { children: [(0, jsx_runtime_1.jsxs)(eui_1.EuiFlexGroup, { gutterSize: "s", responsive: false, children: [(0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { children: (0, jsx_runtime_1.jsx)(eui_1.EuiFieldSearch, { fullWidth: true, placeholder: "Search title, description, technique ID\u2026", value: search, onChange: handleSearchChange, isClearable: true, isLoading: isLoading }) }), (0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, style: { minWidth: 180 }, children: (0, jsx_runtime_1.jsx)(eui_1.EuiSelect, { options: MITRE_TACTIC_OPTIONS, value: mitreFilter, onChange: handleMitreChange, "aria-label": "Filter by MITRE tactic" }) }), (0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, style: { minWidth: 160 }, children: (0, jsx_runtime_1.jsx)(eui_1.EuiSelect, { options: IR_PHASE_OPTIONS, value: irPhaseFilter, onChange: handleIrPhaseChange, "aria-label": "Filter by IR phase" }) })] }), (0, jsx_runtime_1.jsx)(eui_1.EuiSpacer, { size: "m" }), isLoading && docs.length === 0 ? ((0, jsx_runtime_1.jsx)(eui_1.EuiFlexGroup, { justifyContent: "center", children: (0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, children: (0, jsx_runtime_1.jsx)(eui_1.EuiLoadingSpinner, { size: "xl" }) }) })) : docs.length === 0 ? ((0, jsx_runtime_1.jsx)(eui_1.EuiText, { color: "subdued", textAlign: "center", children: (0, jsx_runtime_1.jsxs)("p", { children: ["No rules found. ", !search && !mitreFilter ? 'Use "Sync Rules" to import from GitHub.' : 'Try a different search or filter.'] }) })) : ((0, jsx_runtime_1.jsxs)(jsx_runtime_1.Fragment, { children: [(0, jsx_runtime_1.jsxs)(eui_1.EuiText, { size: "xs", color: "subdued", style: { marginBottom: 8 }, children: [total.toLocaleString(), " rule", total !== 1 ? 's' : '', mitreFilter ? ` · ${TACTIC_LABELS[mitreFilter]}` : '', irPhaseFilter ? ` · IR: ${irPhaseFilter}` : ''] }), (0, jsx_runtime_1.jsx)(eui_1.EuiBasicTable, { items: docs, columns: columns, pagination: {
@@ -194,7 +187,7 @@ const RuleSelector = ({ onClose, onSelect, apiService }) => {
                                     pageSize: PAGE_SIZE,
                                     totalItemCount: total,
                                     showPerPageOptions: false,
-                                }, onChange: ({ page }) => { var _a; return setPageIndex((_a = page === null || page === void 0 ? void 0 : page.index) !== null && _a !== void 0 ? _a : 0); } })] }))] })] }));
+                                }, onChange: ({ page }) => setPageIndex(page?.index ?? 0) })] }))] })] }));
 };
 exports.RuleSelector = RuleSelector;
 //# sourceMappingURL=RuleSelector.js.map

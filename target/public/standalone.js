@@ -6,8 +6,7 @@ const App_1 = require("./components/App");
 const KibanaContext_1 = require("./context/KibanaContext");
 const standaloneHttp = {
     get: async (url, options) => {
-        var _a;
-        const params = new URLSearchParams(Object.entries((_a = options === null || options === void 0 ? void 0 : options.query) !== null && _a !== void 0 ? _a : {})
+        const params = new URLSearchParams(Object.entries(options?.query ?? {})
             .filter(([, v]) => v !== undefined && v !== null)
             .map(([k, v]) => [k, String(v)]));
         const fullUrl = params.toString() ? `${url}?${params}` : url;
@@ -21,7 +20,7 @@ const standaloneHttp = {
             method: 'POST',
             credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json', 'kbn-xsrf': 'true' },
-            body: options === null || options === void 0 ? void 0 : options.body,
+            body: options?.body,
         });
         if (!res.ok)
             throw new Error(await res.text());

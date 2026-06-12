@@ -55,26 +55,25 @@ const App = () => {
         setToasts(prev => prev.filter(t => t.id !== id));
     }, []);
     const handleSyncRules = (0, react_1.useCallback)(async () => {
-        var _a, _b, _c;
         setIsSyncing(true);
         try {
             const res = await apiService.syncFromGitHub();
             if (res.success) {
-                const synced = (_a = res.synced) !== null && _a !== void 0 ? _a : 0;
+                const synced = res.synced ?? 0;
                 const found = res.total_found;
                 const detail = found != null && found > synced
                     ? `${synced} of ${found} rules indexed`
                     : `${synced} rules indexed`;
                 const color = synced > 0 ? 'success' : 'warning';
                 addToast({
-                    title: (_b = res.message) !== null && _b !== void 0 ? _b : detail,
+                    title: res.message ?? detail,
                     color,
                     iconType: color === 'success' ? 'check' : 'warning',
                     toastLifeTimeMs: 10000,
                 });
             }
             else {
-                addToast({ title: (_c = res.message) !== null && _c !== void 0 ? _c : 'Sync failed', color: 'danger', iconType: 'error', toastLifeTimeMs: 10000 });
+                addToast({ title: res.message ?? 'Sync failed', color: 'danger', iconType: 'error', toastLifeTimeMs: 10000 });
             }
         }
         catch (e) {
@@ -85,7 +84,6 @@ const App = () => {
         }
     }, [apiService, addToast]);
     const handleTestRun = (0, react_1.useCallback)(async ({ indexPattern, timeframeHours }) => {
-        var _a;
         setIsTestRunning(true);
         setTestRunResult(null);
         setTestRunError(null);
@@ -101,7 +99,7 @@ const App = () => {
                 setTestRunResult(res.data);
             }
             else {
-                setTestRunError((_a = res.message) !== null && _a !== void 0 ? _a : 'Test run failed');
+                setTestRunError(res.message ?? 'Test run failed');
             }
         }
         catch (e) {
@@ -112,7 +110,6 @@ const App = () => {
         }
     }, [apiService, yaml, conversionPipeline, conversionFormat]);
     const handleClusterHits = (0, react_1.useCallback)(async (testRunId) => {
-        var _a;
         setIsClusteringHits(true);
         setClusterHitsResult(null);
         setClusterHitsError(null);
@@ -122,7 +119,7 @@ const App = () => {
                 setClusterHitsResult(res.data);
             }
             else {
-                setClusterHitsError((_a = res.message) !== null && _a !== void 0 ? _a : 'Cluster hits failed');
+                setClusterHitsError(res.message ?? 'Cluster hits failed');
             }
         }
         catch (e) {
@@ -133,7 +130,6 @@ const App = () => {
         }
     }, [apiService]);
     const handleDeploy = (0, react_1.useCallback)(async ({ schedule, enabled }) => {
-        var _a;
         setIsDeploying(true);
         setDeployResult(null);
         setDeployError(null);
@@ -150,7 +146,7 @@ const App = () => {
                 addToast({ title: `Rule "${res.data.name}" created in Elastic Security`, color: 'success', iconType: 'check' });
             }
             else {
-                setDeployError((_a = res.message) !== null && _a !== void 0 ? _a : 'Deploy failed');
+                setDeployError(res.message ?? 'Deploy failed');
             }
         }
         catch (e) {

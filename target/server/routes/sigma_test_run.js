@@ -22,7 +22,6 @@ function registerSigmaTestRunRoute(router, config) {
             }),
         },
     }, async (_context, request, response) => {
-        var _a;
         const { ruleYaml, indexPattern, timeframeHours, pipeline, queryFormat } = request.body;
         try {
             const fetchRes = await fetch(`${SIGMA_API_URL}/test-runs`, {
@@ -38,7 +37,7 @@ function registerSigmaTestRunRoute(router, config) {
             });
             const payload = await fetchRes.json().catch(() => null);
             if (!fetchRes.ok) {
-                const message = (_a = payload === null || payload === void 0 ? void 0 : payload.detail) !== null && _a !== void 0 ? _a : `Test run failed: ${fetchRes.status}`;
+                const message = payload?.detail ?? `Test run failed: ${fetchRes.status}`;
                 return response.customError({ statusCode: fetchRes.status, body: { message } });
             }
             return response.ok({ body: { success: true, data: payload } });
@@ -58,14 +57,13 @@ function registerSigmaTestRunRoute(router, config) {
             body: config_schema_1.schema.object({ topN: config_schema_1.schema.number({ defaultValue: 5, min: 1, max: 20 }) }),
         },
     }, async (_context, request, response) => {
-        var _a;
         const { testRunId } = request.params;
         const { topN } = request.body;
         try {
             const fetchRes = await fetch(`${SIGMA_API_URL}/test-runs/${encodeURIComponent(testRunId)}/cluster-hits?top_n=${topN}`, { method: 'POST', headers: authHeaders() });
             const payload = await fetchRes.json().catch(() => null);
             if (!fetchRes.ok) {
-                return response.customError({ statusCode: fetchRes.status, body: { message: (_a = payload === null || payload === void 0 ? void 0 : payload.detail) !== null && _a !== void 0 ? _a : 'Cluster-hits failed' } });
+                return response.customError({ statusCode: fetchRes.status, body: { message: payload?.detail ?? 'Cluster-hits failed' } });
             }
             return response.ok({ body: { success: true, data: payload } });
         }

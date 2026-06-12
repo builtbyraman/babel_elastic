@@ -41,7 +41,6 @@ function registerStaticAppRoute(router) {
         options: { access: 'public' },
         security: { authz: { enabled: false, reason: 'Static file serving' } },
     }, (_ctx, req, res) => {
-        var _a;
         const fileName = req.params.fileName;
         // Prevent path traversal
         const safe = (0, path_1.normalize)(fileName).replace(/^(\.\.(\/|\\|$))+/, '');
@@ -50,7 +49,7 @@ function registerStaticAppRoute(router) {
             return res.notFound();
         }
         const content = (0, fs_1.readFileSync)(filePath);
-        const mime = (_a = MIME[(0, path_1.extname)(filePath)]) !== null && _a !== void 0 ? _a : 'application/octet-stream';
+        const mime = MIME[(0, path_1.extname)(filePath)] ?? 'application/octet-stream';
         return res.ok({ body: content, headers: { 'content-type': mime } });
     });
 }

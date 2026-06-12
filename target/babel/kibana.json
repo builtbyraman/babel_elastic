@@ -1,6 +1,6 @@
 {
   "id": "babel",
-  "version": "2.0.1",
+  "version": "1.0.3",
   "kibanaVersion": "9.3.4",
   "server": true,
   "ui": true,
