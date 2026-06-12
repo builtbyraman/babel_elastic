@@ -151,19 +151,23 @@ function cellStyle(count) {
         color = '#98A2B3';
     }
     else if (count === 1) {
-        bg = '#C3E6CB';
+        bg = '#D4EDDA';
         color = '#155724';
     }
-    else if (count <= 3) {
+    else if (count <= 5) {
         bg = '#54B399';
         color = '#fff';
     }
-    else if (count <= 6) {
+    else if (count <= 10) {
         bg = '#017D73';
         color = '#fff';
     }
+    else if (count <= 20) {
+        bg = '#005F5A';
+        color = '#fff';
+    }
     else {
-        bg = '#004643';
+        bg = '#003D3A';
         color = '#fff';
     }
     return {
@@ -176,7 +180,6 @@ function cellStyle(count) {
 }
 const StatBox = ({ value, label }) => ((0, jsx_runtime_1.jsxs)(eui_1.EuiPanel, { hasBorder: true, paddingSize: "m", style: { minWidth: 140, textAlign: 'center' }, children: [(0, jsx_runtime_1.jsx)(eui_1.EuiText, { size: "m", style: { fontWeight: 700, fontSize: 28, lineHeight: '1.2' }, children: value }), (0, jsx_runtime_1.jsx)(eui_1.EuiText, { size: "xs", color: "subdued", children: label })] }));
 const CoverageHeatmap = ({ apiService, embedded }) => {
-    var _a, _b;
     const [coverage, setCoverage] = (0, react_1.useState)(null);
     const [ruleYamls, setRuleYamls] = (0, react_1.useState)([]);
     const [isLoading, setIsLoading] = (0, react_1.useState)(false);
@@ -250,21 +253,26 @@ const CoverageHeatmap = ({ apiService, embedded }) => {
     const coveredCount = coverage
         ? Object.keys(TECHNIQUE_MAP).filter(id => { var _a; return ((_a = ruleCounts[id]) !== null && _a !== void 0 ? _a : 0) > 0; }).length
         : 0;
-    const tacticsCovered = (_b = (_a = coverage === null || coverage === void 0 ? void 0 : coverage.covered_tactics) === null || _a === void 0 ? void 0 : _a.length) !== null && _b !== void 0 ? _b : 0;
+    // Derive tactic coverage from the rendered TECHNIQUE_MAP — avoids hyphen/underscore
+    // mismatch between API tactic keys and the frontend TACTIC_ORDER keys.
+    const coveredTacticSet = new Set(TACTIC_ORDER.filter(tactic => { var _a; return ((_a = TECHNIQUES_BY_TACTIC[tactic]) !== null && _a !== void 0 ? _a : []).some(({ id }) => { var _a; return ((_a = ruleCounts[id]) !== null && _a !== void 0 ? _a : 0) > 0; }); }));
+    const uncoveredTacticList = TACTIC_ORDER.filter(tactic => { var _a; return ((_a = TECHNIQUES_BY_TACTIC[tactic]) !== null && _a !== void 0 ? _a : []).length > 0 && !coveredTacticSet.has(tactic); });
+    const tacticsCovered = coveredTacticSet.size;
     const pct = TOTAL_TECHNIQUES > 0 ? Math.round((coveredCount / TOTAL_TECHNIQUES) * 100) : 0;
     return ((0, jsx_runtime_1.jsxs)("div", { style: { padding: 16, ...(embedded ? {} : { overflowY: 'auto', height: 'calc(100vh - 96px)', marginTop: 48 }) }, children: [(0, jsx_runtime_1.jsxs)(eui_1.EuiFlexGroup, { alignItems: "flexStart", justifyContent: "spaceBetween", gutterSize: "m", children: [(0, jsx_runtime_1.jsxs)(eui_1.EuiFlexItem, { grow: false, children: [(0, jsx_runtime_1.jsx)(eui_1.EuiTitle, { size: "m", children: (0, jsx_runtime_1.jsx)("h2", { children: "ATT&CK Coverage Heatmap" }) }), (0, jsx_runtime_1.jsx)(eui_1.EuiText, { size: "s", color: "subdued", children: (0, jsx_runtime_1.jsx)("p", { children: "Detection coverage across MITRE ATT&CK from your rule library." }) })] }), (0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, children: (0, jsx_runtime_1.jsxs)(eui_1.EuiFlexGroup, { gutterSize: "s", children: [(0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, children: (0, jsx_runtime_1.jsx)(eui_1.EuiButton, { iconType: "download", onClick: handleExport, isLoading: isExporting, isDisabled: !coverage, size: "s", children: "Export Navigator Layer" }) }), (0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, children: (0, jsx_runtime_1.jsx)(eui_1.EuiButton, { iconType: "refresh", onClick: load, isLoading: isLoading, size: "s", children: "Recompute" }) })] }) })] }), (0, jsx_runtime_1.jsx)(eui_1.EuiSpacer, { size: "m" }), isLoading && ((0, jsx_runtime_1.jsx)(eui_1.EuiFlexGroup, { justifyContent: "center", style: { paddingTop: 80 }, children: (0, jsx_runtime_1.jsxs)(eui_1.EuiFlexItem, { grow: false, style: { textAlign: 'center' }, children: [(0, jsx_runtime_1.jsx)(eui_1.EuiLoadingSpinner, { size: "xl" }), (0, jsx_runtime_1.jsx)(eui_1.EuiSpacer, { size: "s" }), (0, jsx_runtime_1.jsxs)(eui_1.EuiText, { size: "s", color: "subdued", children: ["Computing coverage from ", ruleCount, " rules\u2026"] })] }) })), error && !isLoading && ((0, jsx_runtime_1.jsx)(eui_1.EuiCallOut, { title: error, color: "warning", iconType: "warning" })), coverage && !isLoading && ((0, jsx_runtime_1.jsxs)(jsx_runtime_1.Fragment, { children: [(0, jsx_runtime_1.jsxs)(eui_1.EuiFlexGroup, { gutterSize: "m", responsive: false, wrap: true, children: [(0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, children: (0, jsx_runtime_1.jsx)(StatBox, { value: ruleCount, label: "Rules in library" }) }), (0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, children: (0, jsx_runtime_1.jsx)(StatBox, { value: coveredCount, label: "Techniques covered" }) }), (0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, children: (0, jsx_runtime_1.jsx)(StatBox, { value: `${pct}%`, label: `of ${TOTAL_TECHNIQUES} tracked` }) }), (0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, children: (0, jsx_runtime_1.jsx)(StatBox, { value: `${tacticsCovered} / ${TACTIC_ORDER.length}`, label: "Tactics covered" }) })] }), (0, jsx_runtime_1.jsx)(eui_1.EuiSpacer, { size: "m" }), (0, jsx_runtime_1.jsxs)(eui_1.EuiFlexGroup, { gutterSize: "s", alignItems: "center", style: { maxWidth: 600 }, children: [(0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, style: { minWidth: 80 }, children: (0, jsx_runtime_1.jsx)(eui_1.EuiText, { size: "xs", color: "subdued", children: "Coverage" }) }), (0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { children: (0, jsx_runtime_1.jsx)("div", { style: { background: '#EBF0F5', borderRadius: 4, height: 8, width: '100%' }, children: (0, jsx_runtime_1.jsx)("div", { style: { background: '#017D73', borderRadius: 4, height: 8, width: `${pct}%`, transition: 'width 0.4s' } }) }) }), (0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, style: { minWidth: 36 }, children: (0, jsx_runtime_1.jsxs)(eui_1.EuiText, { size: "xs", color: "subdued", children: [pct, "%"] }) })] }), (0, jsx_runtime_1.jsx)(eui_1.EuiSpacer, { size: "m" }), (0, jsx_runtime_1.jsxs)(eui_1.EuiFlexGroup, { gutterSize: "s", alignItems: "center", wrap: true, children: [(0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, children: (0, jsx_runtime_1.jsx)(eui_1.EuiText, { size: "xs", color: "subdued", children: "Legend:" }) }), [
                                 { bg: '#EBF0F5', label: 'No coverage' },
-                                { bg: '#C3E6CB', label: '1 rule' },
-                                { bg: '#54B399', label: '2–3 rules' },
-                                { bg: '#017D73', label: '4–6 rules' },
-                                { bg: '#004643', label: '7+ rules' },
-                            ].map(({ bg, label }) => ((0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, children: (0, jsx_runtime_1.jsxs)("span", { style: { display: 'flex', alignItems: 'center', gap: 4 }, children: [(0, jsx_runtime_1.jsx)("span", { style: { width: 12, height: 12, background: bg, borderRadius: 2, display: 'inline-block', border: '1px solid #D3DAE6' } }), (0, jsx_runtime_1.jsx)(eui_1.EuiText, { size: "xs", children: label })] }) }, label)))] }), (0, jsx_runtime_1.jsx)(eui_1.EuiSpacer, { size: "s" }), coverage.uncovered_tactics.length > 0 && ((0, jsx_runtime_1.jsx)(eui_1.EuiCallOut, { title: `${coverage.uncovered_tactics.length} tactic${coverage.uncovered_tactics.length > 1 ? 's' : ''} with no coverage`, color: "warning", iconType: "alert", size: "s", children: (0, jsx_runtime_1.jsx)(eui_1.EuiFlexGroup, { gutterSize: "xs", wrap: true, children: coverage.uncovered_tactics.map(t => {
+                                { bg: '#D4EDDA', label: '1 rule' },
+                                { bg: '#54B399', label: '2–5 rules' },
+                                { bg: '#017D73', label: '6–10 rules' },
+                                { bg: '#005F5A', label: '11–20 rules' },
+                                { bg: '#003D3A', label: '20+ rules' },
+                            ].map(({ bg, label }) => ((0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, children: (0, jsx_runtime_1.jsxs)("span", { style: { display: 'flex', alignItems: 'center', gap: 4 }, children: [(0, jsx_runtime_1.jsx)("span", { style: { width: 12, height: 12, background: bg, borderRadius: 2, display: 'inline-block', border: '1px solid #D3DAE6' } }), (0, jsx_runtime_1.jsx)(eui_1.EuiText, { size: "xs", children: label })] }) }, label)))] }), (0, jsx_runtime_1.jsx)(eui_1.EuiSpacer, { size: "s" }), uncoveredTacticList.length > 0 && ((0, jsx_runtime_1.jsx)(eui_1.EuiCallOut, { title: `${uncoveredTacticList.length} tactic${uncoveredTacticList.length > 1 ? 's' : ''} with no coverage`, color: "warning", iconType: "alert", size: "s", children: (0, jsx_runtime_1.jsx)(eui_1.EuiFlexGroup, { gutterSize: "xs", wrap: true, children: uncoveredTacticList.map(t => {
                                 var _a;
                                 return ((0, jsx_runtime_1.jsx)(eui_1.EuiFlexItem, { grow: false, children: (0, jsx_runtime_1.jsx)(eui_1.EuiBadge, { color: "warning", children: (_a = TACTIC_LABELS[t]) !== null && _a !== void 0 ? _a : t }) }, t));
                             }) }) })), (0, jsx_runtime_1.jsx)(eui_1.EuiSpacer, { size: "m" }), (0, jsx_runtime_1.jsx)("div", { style: { overflowX: 'auto', paddingBottom: 16 }, children: (0, jsx_runtime_1.jsx)("div", { style: { display: 'flex', gap: 6, minWidth: `${TACTIC_ORDER.length * 158}px` }, children: TACTIC_ORDER.map(tactic => {
-                                var _a, _b, _c;
+                                var _a, _b;
                                 const techniques = (_a = TECHNIQUES_BY_TACTIC[tactic]) !== null && _a !== void 0 ? _a : [];
-                                const covered = ((_b = coverage.covered_tactics) !== null && _b !== void 0 ? _b : []).includes(tactic);
+                                const covered = coveredTacticSet.has(tactic);
                                 return ((0, jsx_runtime_1.jsxs)("div", { style: { flex: '0 0 152px', width: 152 }, children: [(0, jsx_runtime_1.jsx)("div", { style: {
                                                 background: covered ? '#006BB4' : '#69707D',
                                                 color: '#fff',
@@ -276,7 +284,7 @@ const CoverageHeatmap = ({ apiService, embedded }) => {
                                                 minHeight: 42,
                                                 display: 'flex',
                                                 alignItems: 'center',
-                                            }, children: (_c = TACTIC_LABELS[tactic]) !== null && _c !== void 0 ? _c : tactic }), techniques.map(({ id, name }) => {
+                                            }, children: (_b = TACTIC_LABELS[tactic]) !== null && _b !== void 0 ? _b : tactic }), techniques.map(({ id, name }) => {
                                             var _a, _b;
                                             const count = (_a = ruleCounts[id]) !== null && _a !== void 0 ? _a : 0;
                                             const rules = (_b = ruleNames[id]) !== null && _b !== void 0 ? _b : [];

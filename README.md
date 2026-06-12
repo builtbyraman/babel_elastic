@@ -2,6 +2,64 @@
 
 Cybersecurity is a literal Babel — every platform speaks a different dialect, and detection rules written for one rarely run on another. Babel reverses the challenge: Built on the updated [SIGMA](https://sigmahq.io/) open standard and running natively inside modernized Elastic and Kibana, it lets security teams author, convert, test, deploy, and track detection rules across platforms and tools from a single interface aligned to the incident response lifecycle and tactics, techniques, and procedures.
 
+> **Babel is a Kibana plugin — not a Fleet integration.**
+> It cannot be installed from the Kibana Integrations page. Install it one of two ways:
+> - **Docker Compose (recommended):** `docker-compose up --build -d` — the full stack starts automatically. See [Quick start](#quick-start-docker-compose).
+> - **Manual install:** `bin/kibana-plugin install file:///path/to/babel-9.3.4.zip` — for existing Kibana deployments. See [Installing the pre-built zip](#distribution-installing-the-pre-built-zip).
+
+## Screenshots
+
+### Rule Editor
+Write SIGMA rules in the YAML editor (left), see auto-populated fields in the Visual Editor (center), and get instant format conversion in the Elasticsearch Output panel (right). One-click **Open in Discover**, **Backtest**, and **Deploy** actions sit above the output.
+
+![Babel rule editor — YAML editor, visual editor, and Elasticsearch output](docs/screenshots/01_editor_main.png)
+
+### Real Rule — Full Metadata and EQL Conversion
+Load any rule from the library to see its full SIGMA YAML, auto-populated Visual Editor fields (title, status, level, description, logsource, MITRE tags, IR phase), and live converted output. Here an AWS CloudTrail rule converts to EQL in one click.
+
+![AWS Route S3 rule loaded in the editor with MITRE tags and EQL conversion output](docs/screenshots/01_editor_main_EQL.png)
+
+### Multi-Format Conversion
+Switch the output format from the dropdown — Lucene, EQL, ES|QL, Query DSL, Kibana NDJSON, SIEM Rule, or ElastAlert — and the converted query updates instantly.
+
+![Rule editor with EQL output selected showing converted query](docs/screenshots/02_conversion_output.png)
+
+### MITRE ATT&CK Coverage Heatmap
+The Coverage view maps your rule library across all 14 ATT&CK tactics. Each cell shows technique coverage with a six-level color scale: no coverage → 1 rule → 2–5 → 6–10 → 11–20 → 20+ rules. Summary stats show total rules, techniques hit, and tactics covered.
+
+![ATT&CK Coverage Heatmap showing 3,730 rules mapped across 14 tactics](docs/screenshots/03_coverage_heatmap.png)
+
+### IR Readiness Report
+The IR Readiness tab assesses detection coverage against five threat scenarios — ransomware, APT, insider threat, data breach, and supply chain. Select a scenario and click Analyze for a phase-by-phase breakdown.
+
+![IR Readiness Report tab with threat scenario selector](docs/screenshots/04_ir_readiness.png)
+
+Running the Insider Threat scenario shows 94% technique coverage across 5/5 phases, with covered and missing techniques listed per phase alongside the specific rules providing coverage.
+
+![IR Readiness Report — Insider Threat scenario showing 94% technique coverage across 5 phases](docs/screenshots/04_ir_readiness_category.png)
+
+### Data Source Awareness
+The Data Sources tab maps your Elasticsearch indices against SIGMA logsource categories. Sources with no matching index data are flagged — rules targeting those sources won't produce alerts until the data is ingested.
+
+![Data Source Awareness tab showing 11 logsource products mapped to Elasticsearch indices](docs/screenshots/05_datasource_coverage.png)
+
+### Rule Library
+The Select Rule overlay searches all 3,730 synced rules by title, description, or technique ID. Filter by tactic or IR phase; click any row to load the rule directly into the editor.
+
+![Rule library overlay showing 3,730 rules with tactic and severity tags](docs/screenshots/06_rule_library.png)
+
+### GitHub Repository Settings
+Configure multiple GitHub repositories as rule sources — including separate paths within the same repo. Rules are synced per-repository with full isolation.
+
+![Settings modal showing three configured GitHub repositories](docs/screenshots/07_settings_modal.png)
+
+### Integration Status
+The Settings panel shows live connectivity to the Babel API and Elasticsearch, available data source categories, and all configured repositories with their enabled state.
+
+![Settings panel showing Babel API ok, Elasticsearch v9.3.4 ok, and configured repositories](docs/screenshots/08_status_page.png)
+
+---
+
 ## Features
 
 - **YAML editor** — write and validate SIGMA rules with real-time syntax feedback
@@ -33,7 +91,7 @@ Cybersecurity is a literal Babel — every platform speaks a different dialect, 
 | Dependency | Version | Notes |
 |---|---|---|
 | Kibana / Elasticsearch | 9.3.4 | Pinned — see note below |
-| Python | 3.11+ | Required by the Sigma conversion API |
+| Python | 3.11+ | Required by the Babel API |
 
 ### Build tools
 
@@ -85,65 +143,126 @@ These are required by `server/translation_script/sigma/`. Set up a virtual envir
 
 ## Quick start (Docker Compose)
 
-> **Prerequisites:** Docker, Node.js 20+, `npm`.
+> **Prerequisites:** Docker and Docker Compose. Node.js 20+ is only needed if you are modifying the plugin source.
+
+The full stack — Elasticsearch, Kibana (with Babel), and the Babel API — starts with a single command.
+
+### 1. Configure credentials
 
 ```bash
-# 1. Build the plugin zip
-npm install
-npm run build           # produces target/babel-2.0.1.zip
-
-# 2. Configure the stack
 cp .env.example .env
-# Edit .env — at minimum change the passwords and point SIGMA_API_URL
-# at your Sigma conversion API (see Architecture section below).
-
-# 3. Start Elasticsearch + Kibana with the plugin installed
-docker-compose up --build
 ```
 
-Kibana starts at **http://localhost:[port]** (login: `elastic` / password from `.env`).
+Edit `.env` and set at minimum:
 
-Navigate to **Babel** in the left sidebar or via search. The **Status** tab shows whether the plugin is connected to Elasticsearch and the Sigma API.
+| Variable | Purpose |
+|---|---|
+| `ELASTIC_PASSWORD` | Password for the `elastic` superuser |
+| `KIBANA_SYSTEM_PASSWORD` | Internal Kibana service account password |
+| `KIBANA_ENCRYPTION_KEY` | 32-character key for encrypted saved objects |
 
-> **Note:** On first run, `docker-compose up --build` compiles the Kibana image
-> with the plugin installed (~2 min). Subsequent starts skip the build.
+> **Note — existing Elasticsearch volume:** If you previously ran the stack with a different `ELASTIC_PASSWORD`, the stored password takes precedence over the environment variable. Reset it with: `docker exec babel-es bin/elasticsearch-reset-password -u elastic -b`
+
+### 2. Build the Kibana plugin (one-time)
+
+> **This step is required before the first `docker-compose up`.** Unlike most Docker Compose setups, the Kibana image cannot build the plugin at container startup — the plugin must be compiled locally first and is then copied into the image.
+
+```bash
+npm install
+KIBANA_VERSION=9.3.4 npm run build
+```
+
+You only need to repeat this if you modify the plugin source. Normal restarts (`docker-compose up -d`) do not require a rebuild.
+
+### 3. Start the stack
+
+```bash
+docker-compose up --build -d
+```
+
+This starts four services in dependency order:
+
+| Service | Container | Port | Purpose |
+|---|---|---|---|
+| Elasticsearch | `babel-es` | 9200 | Rule storage and live rule testing |
+| kibana-setup | *(exits after init)* | — | Sets the `kibana_system` account password once |
+| Babel API | `babel-api` | 8001 | Rule conversion, validation, coverage, IR readiness |
+| Kibana + Babel | `babel-kibana` | 5601 | UI |
+
+First boot pulls images and installs Python dependencies (~2–3 min). Subsequent starts are fast.
+
+### 4. Verify the stack is up
+
+```bash
+# Babel API
+curl http://localhost:8001/health
+# → {"status": "ok", "service": "sigma-api"}
+
+# Kibana
+curl -u elastic:<password> http://localhost:5601/api/babel/status
+# → services: [{name: "Sigma Conversion API", status: "ok"}, {name: "Elasticsearch", status: "ok"}]
+```
+
+Kibana is available at **http://localhost:5601** — log in as `elastic` with the password from `.env`.
+
+Navigate to **Babel** in the left sidebar. To check service connectivity, click the **gear icon (⚙)** in the Babel nav bar to open Settings — the bottom of the panel shows live status for the Babel API and Elasticsearch.
+
+### 5. (First boot only) Sync rules from GitHub
+
+The rule library (`babel_sigma_doc` index) is empty on first boot. In the Babel UI:
+
+1. Go to **Settings** → add a GitHub repository (e.g. `https://github.com/SigmaHQ/sigma`, branch `master`, path `rules/`)
+2. Click **Sync** — this fetches all SIGMA YAML files from the repo
+3. Return to the **Rule Library** tab; rules will appear as the sync completes
+
+> A GitHub Personal Access Token is strongly recommended for large repos like SigmaHQ (~3,000 rules). Without one, GitHub's 60 requests/hour unauthenticated limit will throttle the sync. Use a fine-grained PAT with **Contents: Read** permission only.
+
+### Stopping and restarting
+
+```bash
+docker-compose down        # stop (data volumes preserved)
+docker-compose down -v     # stop and wipe all data (fresh start)
+docker-compose up -d       # restart without rebuilding images
+docker-compose up --build -d  # rebuild images (after source changes)
+```
 
 ---
 
-## Architecture: the Sigma API
+## Architecture: the Babel API
 
-Babel depends on an **external Sigma conversion API** — a separate REST service that handles rule conversion, validation, field mapping, and quality scoring. **The plugin cannot convert or validate rules without it.**
+Babel's conversion, validation, and analysis features are handled by a bundled **Babel API** — a Python Flask service built on [pySigma](https://github.com/SigmaHQ/pySigma) and the Elasticsearch backend. It runs as a separate container (`babel-api`) so the Kibana plugin stays pure JavaScript with no Python runtime dependency.
 
-The Kibana plugin itself is intentionally thin: it manages the UI, stores rules in Elasticsearch, and proxies conversion requests to this API. All the pySigma translation logic lives server-side in the API, keeping the plugin installable on any Kibana version without a Python runtime inside Kibana.
+```
+Kibana (Babel plugin)
+    │ proxy requests
+    ▼
+Babel API  (babel-api:8001)          Elasticsearch  (babel-es:9200)
+├─ POST /v1/conversions              ├─ babel_sigma_doc  (rule library)
+├─ POST /v1/rules/validate           └─ babel_config     (settings)
+├─ POST /v1/coverage
+├─ POST /v1/coverage/navigator-export
+├─ POST /v1/ir-readiness
+├─ GET  /v1/fields[?category=…]
+├─ POST /v1/fields/suggest
+├─ POST /v1/rules/quality
+└─ POST /v1/test-runs                ← also queries Elasticsearch
+```
+
+The Babel API source lives in `sigma-api/` and is built automatically by `docker-compose up --build`.
 
 ### What the API does
 
-The API is a Python-based service (built on pySigma and pySigma-backend-elasticsearch) that:
-- Converts SIGMA YAML to Lucene, EQL, ES|QL, KQL, NDJSON, ElastAlert, and more
-- Validates rule syntax and structure
+- Converts SIGMA YAML to Lucene, EQL, ES|QL, Kibana NDJSON, SIEM Rule, and ElastAlert
+- Validates rule syntax and structure via pySigma
 - Suggests ECS field mappings for logsource/detection fields
-- Scores rule quality (coverage, staleness, completeness)
-- Maps rules to MITRE ATT&CK techniques for heatmap generation
-- Assesses IR readiness across incident response phases
-
-### Running the API
-
-The API runs as a standalone HTTP service. Point `babel.sigmaApiUrl` in `kibana.yml` (or `SIGMA_API_URL` in `.env`) at it. The URL must be reachable from **inside the Kibana process** (or container), not from your browser.
-
-The `docker-compose.yml` includes a commented-out `sigma-api` service block — uncomment it and supply the image for your deployment.
-
-To verify the API is reachable after startup:
-
-```bash
-curl http://<sigma-api-host>:<port>/health
-# Expected: {"status": "ok"} or similar 200 response
-```
-
-The plugin's **Status** page (`Babel → Status`) also shows API reachability and response latency in real time.
+- Scores rule quality (title, description, references, tags, level, status)
+- Maps rules to MITRE ATT&CK techniques for the coverage heatmap
+- Assesses IR readiness across ransomware, APT, insider threat, data breach, and supply chain scenarios
+- Runs live rule tests against Elasticsearch indices
 
 ### What degrades without the API
 
-Features that call the Sigma API will return errors if it is unreachable. Features that work without it:
+Features that call the Babel API will return errors if it is unreachable. Features that work without it:
 
 | Feature | Requires API |
 |---|---|
@@ -158,35 +277,40 @@ Features that call the Sigma API will return errors if it is unreachable. Featur
 | Rule quality scoring | **Yes** |
 | Live rule testing (backtest) | **Yes** |
 
-### Required API endpoints
-
-| Method | Path | Used for |
-|---|---|---|
-| `GET` | `/health` | Status check |
-| `POST` | `/v1/conversions` | Rule conversion and translation |
-| `POST` | `/v1/validate` | YAML validation |
-| `POST` | `/v1/fields` | Field mapping suggestions |
-| `GET` | `/v1/quality` | Rule quality scoring |
-| `POST` | `/v1/ir-readiness` | IR readiness assessment |
-| `GET` | `/v1/coverage` | MITRE ATT&CK coverage mapping |
-| `POST` | `/v1/rules/register` | Rule registry (optional, non-fatal if absent) |
-
 ### API authentication
 
-If your Sigma API requires a bearer token, set the `SIGMA_API_KEY` environment variable on the Kibana server. The plugin forwards it as `Authorization: Bearer <token>` on every request to the API.
+Set `SIGMA_API_KEY` in `.env` to require a bearer token on all Babel API requests. Leave it empty (the default) for unauthenticated access within the Docker network.
 
 ---
 
-## Distribution: installing the pre-built zip
+## Installation
 
-If you received a `babel-<version>.zip` file, install it directly into Kibana:
+Babel is a **Kibana plugin**. It is not an Elastic integration and cannot be installed from the Kibana Integrations page (Fleet → Integrations). That page is for Elastic Agent data integrations, which use a different format entirely. Attempting to install Babel there will fail with a `manifest.yml not found` error.
+
+There are two supported installation methods:
+
+### Option A — Docker Compose (recommended)
+
+The fastest way to get the full stack running. Elasticsearch, Kibana, and the Babel API all start together:
+
+```bash
+cp .env.example .env          # configure credentials
+npm install && KIBANA_VERSION=9.3.4 npm run build   # one-time plugin build
+docker-compose up --build -d  # start the stack
+```
+
+See [Quick start (Docker Compose)](#quick-start-docker-compose) for the full walkthrough.
+
+### Option B — Manual install into an existing Kibana
+
+If you already have Kibana running and want to add Babel to it:
 
 ```bash
 # Kibana must be stopped during installation
 bin/kibana-plugin install file:///absolute/path/to/babel-9.3.4.zip
 ```
 
-Then configure the plugin (see [Configuration](#configuration)) and restart Kibana.
+Then configure `kibana.yml` (see [Configuration](#configuration)) and restart Kibana.
 
 To uninstall:
 ```bash
@@ -203,19 +327,7 @@ bin/kibana-plugin remove babel
 npm install
 ```
 
-### 2. Set up the Python translation engine
-
-The bundled Python script requires a virtual environment with pySigma. Run this once before building:
-
-```bash
-cd server/translation_script
-python3.11 -m venv .venv
-.venv/bin/pip install --upgrade pip
-.venv/bin/pip install -r sigma/requirements.txt
-cd ../..
-```
-
-### 3. Build
+### 2. Build
 
 The build script auto-detects your Kibana version from a local install or a running Docker container named `kibana-local-dev`. If neither is present, set the version explicitly:
 
@@ -243,7 +355,7 @@ cp -r target/babel/ /usr/share/kibana/plugins/babel
 Add the following to `kibana.yml`:
 
 ```yaml
-# URL of the Sigma conversion API — required, no default will work outside Docker
+# URL of the Babel API — required, no default will work outside Docker
 babel.sigmaApiUrl: "http://<sigma-api-host>:<port>/v1"
 
 # URL Kibana uses to call itself when deploying detection rules
@@ -255,7 +367,7 @@ babel.kibanaUrl: "http://localhost:5601"
 
 | Variable | Purpose |
 |---|---|
-| `SIGMA_API_KEY` | Bearer token forwarded to the Sigma API if it requires authentication |
+| `SIGMA_API_KEY` | Bearer token forwarded to the Babel API if it requires authentication |
 
 ---
 

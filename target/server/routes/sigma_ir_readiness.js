@@ -33,7 +33,10 @@ function registerSigmaIrReadinessRoutes(router, config) {
                 : response.customError({ statusCode: res.status, body: { message: (_a = body === null || body === void 0 ? void 0 : body.detail) !== null && _a !== void 0 ? _a : 'IR readiness failed' } });
         }
         catch (err) {
-            return response.internalError({ body: { message: err instanceof Error ? err.message : 'IR readiness failed' } });
+            const _msg = err instanceof Error ? err.message : 'IR readiness failed';
+            if (err instanceof TypeError)
+                return response.customError({ statusCode: 503, body: { message: `Sigma API unreachable: ${_msg}` } });
+            return response.internalError({ body: { message: _msg } });
         }
     });
 }

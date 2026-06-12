@@ -43,6 +43,7 @@ const SIGMA_INDEX_MAPPING = {
             detection: { type: 'object', enabled: false },
             'x-ir-phase': { type: 'keyword' },
             _path: { type: 'keyword' },
+            _repo_id: { type: 'keyword' },
             _repo_slug: { type: 'keyword' },
             _repo_name: { type: 'keyword' },
             _source_repo: { type: 'keyword' },
@@ -50,12 +51,21 @@ const SIGMA_INDEX_MAPPING = {
         },
     },
 };
-async function recreateSigmaIndex(client) {
-    try {
-        await client.indices.delete({ index: SIGMA_INDEX });
+async function ensureSigmaIndex(client) {
+    const exists = await client.indices.exists({ index: SIGMA_INDEX });
+    if (!exists) {
+        await client.indices.create({ index: SIGMA_INDEX, ...SIGMA_INDEX_MAPPING });
     }
-    catch { /* doesn't exist yet */ }
-    await client.indices.create({ index: SIGMA_INDEX, ...SIGMA_INDEX_MAPPING });
+}
+async function deleteRepoRules(client, repoId) {
+    try {
+        await client.deleteByQuery({
+            index: SIGMA_INDEX,
+            refresh: true,
+            query: { term: { _repo_id: repoId } },
+        });
+    }
+    catch { /* index may be empty */ }
 }
 // Fallback repo used when no repos are configured in Settings
 const DEFAULT_REPO = {
@@ -176,12 +186,13 @@ function registerTdmUpdateRoute(router) {
         if (repos.length === 0)
             repos = [DEFAULT_REPO];
         try {
-            // Rebuild the index with a proper mapping on every sync so field-type
-            // conflicts from previous runs don't silently drop documents.
-            await recreateSigmaIndex(client);
-            const bulkOps = [];
+            // Ensure index exists with the correct mapping. Does NOT delete existing data,
+            // so repos that aren't being re-synced keep their rules.
+            await ensureSigmaIndex(client);
             const repoSummaries = [];
             let totalFound = 0;
+            let totalIndexed = 0;
+            let totalErrors = 0;
             for (const repo of repos) {
                 const slug = ownerRepo(repo.url);
                 let paths;
@@ -200,52 +211,71 @@ function registerTdmUpdateRoute(router) {
                 totalFound += available;
                 if (limit !== undefined)
                     paths = paths.slice(0, limit);
+                // Delete only this specific configured entry's rules (keyed by repo.id,
+                // not slug) so multiple paths from the same GitHub repo stay isolated.
+                await deleteRepoRules(client, repo.id);
                 let repoCount = 0;
-                await inBatches(paths, BATCH_SIZE, async (path) => {
+                let repoErrors = 0;
+                const parsed = await inBatches(paths, BATCH_SIZE, async (path) => {
                     var _a, _b;
                     try {
                         const content = await fetchRuleContent(slug, resolvedBranch, path, token || undefined);
-                        const parsed = js_yaml_1.default.load(content);
-                        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-                            const rule = normalizeDates(parsed);
-                            const docId = `${slug}::${(_a = rule.id) !== null && _a !== void 0 ? _a : path}`;
+                        const doc = js_yaml_1.default.load(content);
+                        if (doc && typeof doc === 'object' && !Array.isArray(doc)) {
+                            const rule = normalizeDates(doc);
+                            // Use repo.id as the ID namespace so rules from different configured
+                            // paths of the same repo never collide with each other.
+                            const docId = `${repo.id}::${(_a = rule.id) !== null && _a !== void 0 ? _a : path}`;
                             const ruleCategory = (_b = path.split('/')[1]) !== null && _b !== void 0 ? _b : 'unknown';
-                            bulkOps.push({ index: { _index: SIGMA_INDEX, _id: docId } });
-                            bulkOps.push({
-                                ...rule,
-                                category: ruleCategory,
-                                _path: path,
-                                _repo_slug: slug,
-                                _repo_name: repo.name,
-                                _synced_at: new Date().toISOString(),
-                            });
-                            repoCount++;
+                            return { docId, ruleCategory, rule, path };
                         }
                     }
                     catch { /* skip unparseable rules */ }
+                    return null;
                 });
-                const capped = limit !== undefined && available > limit;
-                repoSummaries.push(capped
-                    ? `${repo.name}: ${repoCount} of ${available} rules`
-                    : `${repo.name}: ${repoCount} rules`);
-            }
-            let totalIndexed = 0;
-            let totalErrors = 0;
-            if (bulkOps.length > 0) {
-                const bulkRes = await client.bulk({ operations: bulkOps, refresh: true });
-                if (bulkRes.errors) {
-                    for (const item of ((_e = bulkRes.items) !== null && _e !== void 0 ? _e : [])) {
-                        const op = (_g = (_f = item.index) !== null && _f !== void 0 ? _f : item.create) !== null && _g !== void 0 ? _g : item.update;
-                        if (op === null || op === void 0 ? void 0 : op.error)
-                            totalErrors++;
-                        else
-                            totalIndexed++;
+                const bulkOps = [];
+                for (const r of parsed) {
+                    if (!r)
+                        continue;
+                    bulkOps.push({ index: { _index: SIGMA_INDEX, _id: r.docId } });
+                    bulkOps.push({
+                        ...r.rule,
+                        category: r.ruleCategory,
+                        _path: r.path,
+                        _repo_id: repo.id,
+                        _repo_slug: slug,
+                        _repo_name: repo.name,
+                        _synced_at: new Date().toISOString(),
+                    });
+                }
+                if (bulkOps.length > 0) {
+                    const bulkRes = await client.bulk({ operations: bulkOps, refresh: false });
+                    if (bulkRes.errors) {
+                        for (const item of ((_e = bulkRes.items) !== null && _e !== void 0 ? _e : [])) {
+                            const op = (_g = (_f = item.index) !== null && _f !== void 0 ? _f : item.create) !== null && _g !== void 0 ? _g : item.update;
+                            if (op === null || op === void 0 ? void 0 : op.error)
+                                repoErrors++;
+                            else
+                                repoCount++;
+                        }
+                    }
+                    else {
+                        repoCount = bulkOps.length / 2;
                     }
                 }
-                else {
-                    totalIndexed = bulkOps.length / 2;
-                }
+                totalIndexed += repoCount;
+                totalErrors += repoErrors;
+                const capped = limit !== undefined && available > limit;
+                const errNote = repoErrors > 0 ? ` (${repoErrors} errors)` : '';
+                repoSummaries.push(capped
+                    ? `${repo.name}: ${repoCount} of ${available} rules${errNote}`
+                    : `${repo.name}: ${repoCount} rules${errNote}`);
             }
+            // Final refresh so the UI sees all newly indexed docs immediately.
+            try {
+                await client.indices.refresh({ index: SIGMA_INDEX });
+            }
+            catch { /* ok */ }
             const summary = totalErrors > 0
                 ? `Indexed ${totalIndexed} rules (${totalErrors} errors) — ${repoSummaries.join(', ')}`
                 : `Synced ${totalIndexed} rules — ${repoSummaries.join(', ')}`;

@@ -55,7 +55,9 @@ export function registerSigmaTranslationRoute(router: IRouter, config: PluginCon
         const translated = payload?.query_result ?? '';
         return response.ok({ body: { success: true, data: { translation: Buffer.from(translated).toString('base64') } } });
       } catch (err: unknown) {
-        return response.internalError({ body: { message: err instanceof Error ? err.message : 'Conversion failed' } });
+        const _msg = err instanceof Error ? err.message : 'Conversion failed';
+        if (err instanceof TypeError) return response.customError({ statusCode: 503, body: { message: `Sigma API unreachable: ${_msg}` } });
+        return response.internalError({ body: { message: _msg } });
       }
     }
   );

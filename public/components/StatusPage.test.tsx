@@ -13,6 +13,7 @@ describe('StatusPage', () => {
         errors: [],
       }),
       getDataSources: jest.fn().mockResolvedValue({ sources: [] }),
+      getRepos: jest.fn().mockResolvedValue({ data: { repos: [] } }),
     } as any;
 
     render(<StatusPage apiService={apiService} />);
@@ -31,6 +32,7 @@ describe('StatusPage', () => {
           { product: 'linux', label: 'Linux', available: false, index_count: 0, doc_count: 0, indices: [], categories: [] },
         ],
       }),
+      getRepos: jest.fn().mockResolvedValue({ data: { repos: [] } }),
     } as any;
 
     render(<StatusPage apiService={apiService} />);
@@ -47,6 +49,7 @@ describe('StatusPage', () => {
         errors: [],
       }),
       getDataSources: jest.fn().mockResolvedValue({ sources: [] }),
+      getRepos: jest.fn().mockResolvedValue({ data: { repos: [] } }),
     } as any;
 
     render(<StatusPage apiService={apiService} />);
@@ -63,6 +66,7 @@ describe('StatusPage', () => {
           { product: 'aws', label: 'AWS', available: false, index_count: 0, doc_count: 0, indices: [], categories: [] },
         ],
       }),
+      getRepos: jest.fn().mockResolvedValue({ data: { repos: [] } }),
     } as any;
 
     render(<StatusPage apiService={apiService} />);

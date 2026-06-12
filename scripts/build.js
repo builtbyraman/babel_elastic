@@ -73,8 +73,8 @@ function run(cmd, opts = {}) {
 
 function dockerAvailable() {
   try {
-    execSync(`docker inspect ${DOCKER_CONTAINER}`, { stdio: 'pipe' });
-    return true;
+    const out = execSync(`docker inspect --format '{{.State.Running}}' ${DOCKER_CONTAINER}`, { stdio: 'pipe' }).toString().trim();
+    return out === 'true';
   } catch { return false; }
 }
 

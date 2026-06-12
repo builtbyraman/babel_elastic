@@ -1,4 +1,4 @@
-# Build the plugin zip before building this image:
+# Build the plugin before building this image:
 #   npm install && npm run build
 # Then start the stack:
 #   docker-compose up --build
@@ -6,6 +6,7 @@
 ARG KIBANA_VERSION=9.3.4
 FROM docker.elastic.co/kibana/kibana:${KIBANA_VERSION}
 
-ARG PLUGIN_VERSION=2.0.1
-COPY target/babel-${PLUGIN_VERSION}.zip /tmp/babel.zip
-RUN bin/kibana-plugin install file:///tmp/babel.zip && rm /tmp/babel.zip
+USER root
+COPY target/babel /usr/share/kibana/plugins/babel
+RUN chown -R kibana:kibana /usr/share/kibana/plugins/babel
+USER kibana

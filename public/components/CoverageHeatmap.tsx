@@ -160,11 +160,12 @@ for (const [id, [name, tactic]] of Object.entries(TECHNIQUE_MAP)) {
 function cellStyle(count: number): React.CSSProperties {
   let bg: string;
   let color: string;
-  if (count === 0)      { bg = '#EBF0F5'; color = '#98A2B3'; }
-  else if (count === 1) { bg = '#C3E6CB'; color = '#155724'; }
-  else if (count <= 3)  { bg = '#54B399'; color = '#fff'; }
-  else if (count <= 6)  { bg = '#017D73'; color = '#fff'; }
-  else                  { bg = '#004643'; color = '#fff'; }
+  if (count === 0)       { bg = '#EBF0F5'; color = '#98A2B3'; }
+  else if (count === 1)  { bg = '#D4EDDA'; color = '#155724'; }
+  else if (count <= 5)   { bg = '#54B399'; color = '#fff'; }
+  else if (count <= 10)  { bg = '#017D73'; color = '#fff'; }
+  else if (count <= 20)  { bg = '#005F5A'; color = '#fff'; }
+  else                   { bg = '#003D3A'; color = '#fff'; }
   return {
     background: bg, color, fontSize: 10, lineHeight: '1.3',
     padding: '4px 6px', borderRadius: 3,
@@ -263,7 +264,18 @@ export const CoverageHeatmap: React.FC<CoverageHeatmapProps> = ({ apiService, em
   const coveredCount = coverage
     ? Object.keys(TECHNIQUE_MAP).filter(id => (ruleCounts[id] ?? 0) > 0).length
     : 0;
-  const tacticsCovered = coverage?.covered_tactics?.length ?? 0;
+
+  // Derive tactic coverage from the rendered TECHNIQUE_MAP — avoids hyphen/underscore
+  // mismatch between API tactic keys and the frontend TACTIC_ORDER keys.
+  const coveredTacticSet = new Set(
+    TACTIC_ORDER.filter(tactic =>
+      (TECHNIQUES_BY_TACTIC[tactic] ?? []).some(({ id }) => (ruleCounts[id] ?? 0) > 0)
+    )
+  );
+  const uncoveredTacticList = TACTIC_ORDER.filter(
+    tactic => (TECHNIQUES_BY_TACTIC[tactic] ?? []).length > 0 && !coveredTacticSet.has(tactic)
+  );
+  const tacticsCovered = coveredTacticSet.size;
   const pct = TOTAL_TECHNIQUES > 0 ? Math.round((coveredCount / TOTAL_TECHNIQUES) * 100) : 0;
 
   return (
@@ -345,10 +357,11 @@ export const CoverageHeatmap: React.FC<CoverageHeatmapProps> = ({ apiService, em
             <EuiFlexItem grow={false}><EuiText size="xs" color="subdued">Legend:</EuiText></EuiFlexItem>
             {[
               { bg: '#EBF0F5', label: 'No coverage' },
-              { bg: '#C3E6CB', label: '1 rule' },
-              { bg: '#54B399', label: '2–3 rules' },
-              { bg: '#017D73', label: '4–6 rules' },
-              { bg: '#004643', label: '7+ rules' },
+              { bg: '#D4EDDA', label: '1 rule' },
+              { bg: '#54B399', label: '2–5 rules' },
+              { bg: '#017D73', label: '6–10 rules' },
+              { bg: '#005F5A', label: '11–20 rules' },
+              { bg: '#003D3A', label: '20+ rules' },
             ].map(({ bg, label }) => (
               <EuiFlexItem key={label} grow={false}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -361,15 +374,15 @@ export const CoverageHeatmap: React.FC<CoverageHeatmapProps> = ({ apiService, em
 
           <EuiSpacer size="s" />
 
-          {coverage.uncovered_tactics.length > 0 && (
+          {uncoveredTacticList.length > 0 && (
             <EuiCallOut
-              title={`${coverage.uncovered_tactics.length} tactic${coverage.uncovered_tactics.length > 1 ? 's' : ''} with no coverage`}
+              title={`${uncoveredTacticList.length} tactic${uncoveredTacticList.length > 1 ? 's' : ''} with no coverage`}
               color="warning"
               iconType="alert"
               size="s"
             >
               <EuiFlexGroup gutterSize="xs" wrap>
-                {coverage.uncovered_tactics.map(t => (
+                {uncoveredTacticList.map(t => (
                   <EuiFlexItem key={t} grow={false}>
                     <EuiBadge color="warning">{TACTIC_LABELS[t] ?? t}</EuiBadge>
                   </EuiFlexItem>
@@ -384,7 +397,7 @@ export const CoverageHeatmap: React.FC<CoverageHeatmapProps> = ({ apiService, em
             <div style={{ display: 'flex', gap: 6, minWidth: `${TACTIC_ORDER.length * 158}px` }}>
               {TACTIC_ORDER.map(tactic => {
                 const techniques = TECHNIQUES_BY_TACTIC[tactic] ?? [];
-                const covered = (coverage.covered_tactics ?? []).includes(tactic);
+                const covered = coveredTacticSet.has(tactic);
                 return (
                   <div key={tactic} style={{ flex: '0 0 152px', width: 152 }}>
                     <div style={{

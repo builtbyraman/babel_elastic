@@ -31,38 +31,43 @@ services:
     depends_on:
       elasticsearch:
         condition: service_healthy
-    command: >
-      bash -c '
-        until curl -s -u "elastic:${ELASTIC_PASSWORD:-changeme}"
-          -X POST http://elasticsearch:9200/_security/user/kibana_system/_password
-          -H "Content-Type: application/json"
-          -d "{\"password\":\"${KIBANA_SYSTEM_PASSWORD:-kibana_changeme}\"}"
+    command:
+      - bash
+      - -c
+      - |
+        until curl -s -u "elastic:${ELASTIC_PASSWORD:-changeme}" \
+          -X POST http://elasticsearch:9200/_security/user/kibana_system/_password \
+          -H "Content-Type: application/json" \
+          -d "{\"password\":\"${KIBANA_SYSTEM_PASSWORD:-kibana_changeme}\"}" \
           | grep -q "^{}"; do
           sleep 2
         done
         echo "kibana_system password set"
-      '
 
   # ── Kibana (with Babel plugin) ────────────────────────────────────────────────
-  # Requires the plugin zip in target/ — run "npm run build" first.
+  # Requires target/babel/ — run "npm run build" first.
   kibana:
     build:
       context: .
       dockerfile: Dockerfile.kibana
       args:
         KIBANA_VERSION: "9.3.4"
-        PLUGIN_VERSION: "2.0.1"
     container_name: babel-kibana
     depends_on:
       kibana-setup:
         condition: service_completed_successfully
+      sigma-api:
+        condition: service_healthy
     environment:
       - SERVER_NAME=kibana
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - ELASTICSEARCH_USERNAME=kibana_system
       - ELASTICSEARCH_PASSWORD=${KIBANA_SYSTEM_PASSWORD:-kibana_changeme}
       - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY:-a_32_character_encryption_key___}
-      # Point the plugin at the Sigma API (see sigma-api service below or bring your own)
+      # Point the plugin at the Sigma API (see sigma-api service below or bring your own).
+      # SIGMA_API_URL is read directly by the plugin via process.env as a fallback because
+      # Kibana does not forward dotted env var names to the plugin config service.
+      - SIGMA_API_URL=${SIGMA_API_URL:-http://sigma-api:8001/v1}
       - babel.sigmaApiUrl=${SIGMA_API_URL:-http://sigma-api:8001/v1}
       - babel.kibanaUrl=http://localhost:5601
     ports:
@@ -76,20 +81,28 @@ services:
       retries: 30
 
   # ── Sigma Conversion API ─────────────────────────────────────────────────────
-  # Babel requires an external Sigma conversion API for rule translation,
-  # validation, field mapping, and analysis. Uncomment and configure this service
-  # with your Sigma API image, or point SIGMA_API_URL at an existing deployment.
-  #
-  # The API must expose the endpoints documented in README.md under
-  # "Architecture: the Sigma API".
-  #
-  # sigma-api:
-  #   image: your-sigma-api-image:latest
-  #   container_name: babel-api
-  #   ports:
-  #     - "127.0.0.1:8001:8001"
-  #   environment:
-  #     - API_KEY=${SIGMA_API_KEY:-}
+  # Wraps pySigma to handle rule conversion, validation, coverage, IR readiness,
+  # field mapping, quality scoring, and live rule testing against Elasticsearch.
+  sigma-api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: babel-api
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD:-changeme}
+      - API_KEY=${SIGMA_API_KEY:-}
+    ports:
+      - "127.0.0.1:8001:8001"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8001/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
 volumes:
   es-data:

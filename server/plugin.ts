@@ -19,16 +19,23 @@ export class BabelPlugin implements Plugin<BabelPluginSetup, BabelPluginStart> {
     let kibanaUrl = 'http://localhost:5601';
     try {
       const cfg = this.initializerContext.config.create<PluginConfig>();
-      if (cfg && typeof (cfg as any).pipe === 'function') {
-        (cfg as any).pipe((v: any) => v).subscribe?.((v: PluginConfig) => {
-          sigmaApiUrl = v.sigmaApiUrl || sigmaApiUrl;
-          kibanaUrl = v.kibanaUrl || kibanaUrl;
+      if (cfg && typeof (cfg as any).subscribe === 'function') {
+        (cfg as any).subscribe((v: PluginConfig) => {
+          if (v.sigmaApiUrl) sigmaApiUrl = v.sigmaApiUrl;
+          if (v.kibanaUrl) kibanaUrl = v.kibanaUrl;
         });
       } else if ((cfg as any)?.sigmaApiUrl) {
         sigmaApiUrl = (cfg as any).sigmaApiUrl;
         kibanaUrl = (cfg as any).kibanaUrl || kibanaUrl;
       }
     } catch { /* use default */ }
+    // Kibana doesn't forward dotted env var names to the plugin config service, so the
+    // Observable above will emit the schema default when babel.sigmaApiUrl isn't in
+    // kibana.yml. Env vars win over schema defaults as the explicit operator override.
+    const envSigmaApiUrl = process.env.SIGMA_API_URL || process.env['babel.sigmaApiUrl'];
+    if (envSigmaApiUrl) sigmaApiUrl = envSigmaApiUrl;
+    const envKibanaUrl = process.env['babel.kibanaUrl'];
+    if (envKibanaUrl) kibanaUrl = envKibanaUrl;
     const pluginConfig: PluginConfig = { sigmaApiUrl, kibanaUrl };
     registerRoutes(router, core, pluginConfig);
     return {};

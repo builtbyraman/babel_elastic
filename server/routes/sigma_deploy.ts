@@ -18,10 +18,6 @@ const FORMAT_TO_RULE_TYPE: Record<string, { type: string; language: string }> = 
   dsl_lucene: { type: 'query', language: 'lucene' },
 };
 
-function extractMitreTags(tags: string[]): string[] {
-  return tags.filter(t => t.startsWith('attack.'));
-}
-
 function buildThreatArray(tags: string[]): unknown[] {
   const techPattern = /^attack\.t(\d+(?:\.\d+)?)$/i;
   const techniques = tags
@@ -100,9 +96,9 @@ export function registerSigmaDeployRoute(router: IRouter, config: PluginConfig):
         }
         query = convPayload?.query_result ?? '';
       } catch (err: unknown) {
-        return response.internalError({
-          body: { message: `Conversion error: ${err instanceof Error ? err.message : String(err)}` },
-        });
+        const _msg = err instanceof Error ? err.message : String(err);
+        if (err instanceof TypeError) return response.customError({ statusCode: 503, body: { message: `Sigma API unreachable: ${_msg}` } });
+        return response.internalError({ body: { message: `Conversion error: ${_msg}` } });
       }
 
       try {

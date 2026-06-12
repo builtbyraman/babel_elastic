@@ -48,9 +48,6 @@ const FORMAT_TO_RULE_TYPE = {
     'es-qs': { type: 'query', language: 'lucene' },
     dsl_lucene: { type: 'query', language: 'lucene' },
 };
-function extractMitreTags(tags) {
-    return tags.filter(t => t.startsWith('attack.'));
-}
 function buildThreatArray(tags) {
     const techPattern = /^attack\.t(\d+(?:\.\d+)?)$/i;
     const techniques = tags
@@ -117,9 +114,10 @@ function registerSigmaDeployRoute(router, config) {
             query = (_b = convPayload === null || convPayload === void 0 ? void 0 : convPayload.query_result) !== null && _b !== void 0 ? _b : '';
         }
         catch (err) {
-            return response.internalError({
-                body: { message: `Conversion error: ${err instanceof Error ? err.message : String(err)}` },
-            });
+            const _msg = err instanceof Error ? err.message : String(err);
+            if (err instanceof TypeError)
+                return response.customError({ statusCode: 503, body: { message: `Sigma API unreachable: ${_msg}` } });
+            return response.internalError({ body: { message: `Conversion error: ${_msg}` } });
         }
         try {
             const jsYaml = await Promise.resolve().then(() => __importStar(require('js-yaml')));

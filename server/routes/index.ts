@@ -13,7 +13,6 @@ import { registerSigmaDeployRoute } from './sigma_deploy';
 import { registerSigmaFieldsRoutes } from './sigma_fields';
 import { registerSigmaCoverageRoute } from './sigma_coverage';
 import { registerSigmaDataSourcesRoute } from './sigma_data_sources';
-import { registerSigmaRuleRegistryRoutes } from './sigma_rule_registry';
 import { registerSigmaIrReadinessRoutes } from './sigma_ir_readiness';
 import { registerSigmaEffectivenessRoutes } from './sigma_effectiveness';
 import { registerStatusRoute } from './status';
@@ -32,7 +31,6 @@ export function registerRoutes(router: IRouter, _core: CoreSetup, config: Plugin
   registerSigmaFieldsRoutes(router, config);
   registerSigmaCoverageRoute(router, config);
   registerSigmaDataSourcesRoute(router);
-  registerSigmaRuleRegistryRoutes(router, config);
   registerSigmaIrReadinessRoutes(router, config);
   registerSigmaEffectivenessRoutes(router, config);
   registerStatusRoute(router, config);

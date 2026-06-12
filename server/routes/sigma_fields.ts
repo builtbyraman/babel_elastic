@@ -36,7 +36,9 @@ export function registerSigmaFieldsRoutes(router: IRouter, config: PluginConfig)
         }
         return response.ok({ body: payload });
       } catch (err: unknown) {
-        return response.internalError({ body: { message: err instanceof Error ? err.message : 'Fields fetch failed' } });
+        const _msg = err instanceof Error ? err.message : 'Fields fetch failed';
+        if (err instanceof TypeError) return response.customError({ statusCode: 503, body: { message: `Sigma API unreachable: ${_msg}` } });
+        return response.internalError({ body: { message: _msg } });
       }
     }
   );
@@ -67,7 +69,9 @@ export function registerSigmaFieldsRoutes(router: IRouter, config: PluginConfig)
         }
         return response.ok({ body: payload });
       } catch (err: unknown) {
-        return response.internalError({ body: { message: err instanceof Error ? err.message : 'Suggest failed' } });
+        const _msg = err instanceof Error ? err.message : 'Suggest failed';
+        if (err instanceof TypeError) return response.customError({ statusCode: 503, body: { message: `Sigma API unreachable: ${_msg}` } });
+        return response.internalError({ body: { message: _msg } });
       }
     }
   );
