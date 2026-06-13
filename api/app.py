@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Sigma API — REST service wrapping pySigma for the Babel Kibana plugin.
+Babel API — REST service wrapping pySigma for the Babel Kibana plugin.
 
 Endpoints
 ---------

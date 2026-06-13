@@ -116,13 +116,23 @@ function assemblePlugin(version) {
 
 // ── Zip plugin for distribution ───────────────────────────────────────────────
 
+function assembleApi() {
+  const apiSrc = join(ROOT, 'api');
+  const apiDst = join(TARGET, 'api');
+  console.log('\nAssembling target/api/ ...');
+  if (existsSync(apiDst)) rmSync(apiDst, { recursive: true, force: true });
+  cpSync(apiSrc, apiDst, { recursive: true });
+  console.log('Babel API assembled at target/api/');
+}
+
 function zipPlugin(version) {
   const zipName = `babel-${version}.zip`;
   const zipPath = join(TARGET, zipName);
   if (existsSync(zipPath)) rmSync(zipPath, { force: true });
-  run(`zip -r "${zipPath}" babel`, { cwd: TARGET });
+  run(`zip -r "${zipPath}" babel api`, { cwd: TARGET });
   console.log(`\nDistributable zip: ${zipPath}`);
-  console.log(`Install with: bin/kibana-plugin install file://${zipPath}`);
+  console.log(`  Kibana plugin: babel/`);
+  console.log(`  Babel API:     api/`);
 }
 
 // ── Deploy to Docker ──────────────────────────────────────────────────────────
@@ -186,7 +196,10 @@ run('npx webpack --config webpack.config.js');
 // 5. Assemble target/babel/
 assemblePlugin(version);
 
-// 6. Zip for distribution → target/babel-<version>.zip
+// 6. Assemble target/api/
+assembleApi();
+
+// 7. Zip for distribution → target/babel-<version>.zip (includes plugin + api)
 zipPlugin(version);
 
 // 7. Deploy to Docker if available
