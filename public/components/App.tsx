@@ -130,7 +130,7 @@ export const App: React.FC = () => {
       if (res.success && res.data) {
         setClusterHitsResult(res.data);
       } else {
-        setClusterHitsError((res as any).message ?? 'Cluster hits failed');
+        setClusterHitsError(res.message ?? 'Cluster hits failed');
       }
     } catch (e) {
       setClusterHitsError(e instanceof Error ? e.message : 'Cluster hits failed');

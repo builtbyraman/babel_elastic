@@ -863,12 +863,13 @@ def rules_register():
 @app.post("/v1/test-runs")
 @require_auth
 def test_runs():
+    import time
     body = request.get_json(force=True) or {}
-    rule_yaml      = body.get("rule_yaml", "")
-    index_pattern  = body.get("index_pattern", "*")
+    rule_yaml       = body.get("rule_yaml", "")
+    index_pattern   = body.get("index_pattern", "*")
     timeframe_hours = int(body.get("timeframe_hours", 24))
-    pipeline       = body.get("pipeline", "ecs_windows")
-    query_format   = body.get("query_format", "lucene")
+    pipeline        = body.get("pipeline", "ecs_windows")
+    query_format    = body.get("query_format", "lucene")
 
     if not rule_yaml:
         return jsonify({"detail": "rule_yaml is required"}), 400
@@ -884,8 +885,9 @@ def test_runs():
 
     now = datetime.now(timezone.utc)
     gte = (now - timedelta(hours=timeframe_hours)).isoformat()
+    t0 = time.time()
 
-    if query_format in ("eql",):
+    if query_format == "eql":
         es_query = {
             "query": query_str,
             "filter": {"range": {"@timestamp": {"gte": gte}}},
@@ -914,6 +916,7 @@ def test_runs():
         )
         resp.raise_for_status()
         data = resp.json()
+        timing_ms = round((time.time() - t0) * 1000)
         hits = data.get("hits", {}).get("hits", [])
         total = data.get("hits", {}).get("total", {})
         total_count = total.get("value", len(hits)) if isinstance(total, dict) else total
@@ -927,10 +930,16 @@ def test_runs():
         }
         return jsonify({
             "test_run_id": run_id,
-            "status": "complete",
-            "total_hits": total_count,
-            "sample_hits": hits[:10],
-            "query": query_str,
+            "hit_count": total_count,
+            "sample_events": [
+                {
+                    "event_id": h.get("_id", ""),
+                    "timestamp": h.get("_source", {}).get("@timestamp", ""),
+                    "source": h.get("_source", {}),
+                }
+                for h in hits[:10]
+            ],
+            "timing_ms": timing_ms,
         })
     except requests.HTTPError as e:
         err = f"Elasticsearch error: {e.response.status_code} {e.response.text[:200]}"
@@ -955,25 +964,46 @@ def cluster_hits(run_id: str):
         return jsonify({"detail": "Test run still in progress"}), 202
 
     hits = run.get("hits", [])
-    # Cluster by top process.name, source.ip, or host.name
-    clusters: dict[str, list] = defaultdict(list)
+
+    # Aggregate top values per field across all hits
+    CLUSTER_FIELDS = [
+        "process.name", "source.ip", "host.name", "user.name",
+        "destination.ip", "event.action", "file.name",
+    ]
+    field_counts: dict[str, dict[str, int]] = {}
     for hit in hits:
         src = hit.get("_source", {})
-        key = (
-            src.get("process", {}).get("name")
-            or src.get("source", {}).get("ip")
-            or src.get("host", {}).get("name")
-            or "unknown"
-        )
-        clusters[key].append(hit)
+        for field in CLUSTER_FIELDS:
+            val: object = src
+            for part in field.split("."):
+                val = val.get(part) if isinstance(val, dict) else None
+            if val is not None:
+                val_str = str(val)
+                if field not in field_counts:
+                    field_counts[field] = {}
+                field_counts[field][val_str] = field_counts[field].get(val_str, 0) + 1
 
-    top_clusters = sorted(clusters.items(), key=lambda x: len(x[1]), reverse=True)[:top_n]
+    clusters = [
+        {
+            "field": field,
+            "buckets": sorted(
+                [{"value": v, "count": c} for v, c in bkts.items()],
+                key=lambda x: x["count"],
+                reverse=True,
+            )[:top_n],
+        }
+        for field, bkts in field_counts.items()
+        if bkts
+    ]
+    clusters.sort(
+        key=lambda c: c["buckets"][0]["count"] if c["buckets"] else 0,
+        reverse=True,
+    )
+
     return jsonify({
         "test_run_id": run_id,
-        "clusters": [
-            {"key": k, "count": len(v), "sample": v[0].get("_source", {})}
-            for k, v in top_clusters
-        ],
+        "total_hits": len(hits),
+        "clusters": clusters[:top_n],
     })
 
 

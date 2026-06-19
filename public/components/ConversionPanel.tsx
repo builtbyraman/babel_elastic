@@ -49,7 +49,11 @@ const DISCOVER_LANGUAGE: Record<string, string> = {
   'esql':  'esql',
 };
 
-const TESTABLE_FORMATS = new Set(['eql', 'esql', 'es-qs', 'dsl_lucene']);
+// Only formats that map cleanly to an Elasticsearch query endpoint are testable:
+// eql → /_eql/search, es-qs → /_search with query_string.
+// dsl_lucene returns a JSON object (not a query string) so query_string rejects it.
+// esql generates its own FROM clause and needs /_query — not yet supported.
+const TESTABLE_FORMATS = new Set(['eql', 'es-qs']);
 const DEPLOYABLE_FORMATS = new Set(['eql', 'esql', 'es-qs']);
 
 function risonStr(s: string): string {
