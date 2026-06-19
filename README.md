@@ -3,9 +3,7 @@
 Cybersecurity is a literal Babel — every platform speaks a different dialect, and detection rules written for one rarely run on another. Babel reverses the challenge: Built on the updated [SIGMA](https://sigmahq.io/) open standard and running natively inside modernized Elastic and Kibana, it lets security teams author, convert, test, deploy, and track detection rules across platforms and tools from a single interface aligned to the incident response lifecycle and tactics, techniques, and procedures.
 
 > **Babel is a Kibana plugin — not a Fleet integration.**
-> It cannot be installed from the Kibana Integrations page. Install it one of two ways:
-> - **Docker Compose (recommended):** `docker-compose up --build -d` — the full stack starts automatically. See [Quick start](#quick-start-docker-compose).
-> - **Manual install:** `bin/kibana-plugin install file:///path/to/babel-9.3.4.zip` — for existing Kibana deployments. See [Installing the pre-built zip](#distribution-installing-the-pre-built-zip).
+> It cannot be installed from the Kibana Integrations page. Install it via Docker Compose: `docker-compose up --build -d` — the full stack starts automatically. See [Quick start](#quick-start-docker-compose).
 
 ## Screenshots
 
@@ -287,11 +285,7 @@ Set `SIGMA_API_KEY` in `.env` to require a bearer token on all Babel API request
 
 Babel is a **Kibana plugin**. It is not an Elastic integration and cannot be installed from the Kibana Integrations page (Fleet → Integrations). That page is for Elastic Agent data integrations, which use a different format entirely. Attempting to install Babel there will fail with a `manifest.yml not found` error.
 
-There are two supported installation methods:
-
-### Option A — Docker Compose (recommended)
-
-The fastest way to get the full stack running. Elasticsearch, Kibana, and the Babel API all start together:
+The supported installation method is Docker Compose — Elasticsearch, Kibana, and the Babel API all start together:
 
 ```bash
 cp .env.example .env          # configure credentials
@@ -301,20 +295,146 @@ docker-compose up --build -d  # start the stack
 
 See [Quick start (Docker Compose)](#quick-start-docker-compose) for the full walkthrough.
 
-### Option B — Manual install into an existing Kibana
+---
 
-If you already have Kibana running and want to add Babel to it:
+## Installing on Security Onion
+
+Security Onion runs Kibana inside a Docker container (`so-kibana`) and mounts the plugins directory from the **host filesystem** at `/nsm/kibana/plugins` into the container as a read-only volume. This means plugin files must be placed on the SO host — not copied into the container — before restarting Kibana.
+
+> **Do not install directly into the container.** Writing to `/usr/share/kibana/plugins/` inside the container lands in the overlay layer, not the host volume. It will appear to work until the container is next restarted or recreated (e.g. on SO update), at which point the plugin silently disappears. Always install on the host at `/nsm/kibana/plugins/`.
+
+### Prerequisites
+
+- SSH access to the Security Onion manager node
+- Node.js 20+ on your **build machine** (not required on the SO node itself)
+- Know your SO Kibana version before building — the plugin `kibanaVersion` must match exactly
+
+**Find your SO Kibana version:**
 
 ```bash
-# Kibana must be stopped during installation
-bin/kibana-plugin install file:///absolute/path/to/babel-9.3.4.zip
+sudo docker exec so-kibana cat /usr/share/kibana/package.json | python3 -c "import sys,json; print(json.load(sys.stdin)['version'])"
 ```
 
-Then configure `kibana.yml` (see [Configuration](#configuration)) and restart Kibana.
+### Step 1 — Build the plugin for your SO Kibana version
 
-To uninstall:
+On your build machine, clone the repo and build with the exact Kibana version SO is running:
+
 ```bash
-bin/kibana-plugin remove babel
+npm install
+KIBANA_VERSION=<your-so-kibana-version> npm run build
+```
+
+This produces `target/babel-<version>.zip` containing both the Kibana plugin (`babel/`) and the Babel API (`api/`).
+
+### Step 2 — Copy the zip to the SO host
+
+```bash
+scp target/babel-<version>.zip <so-user>@<so-host>:/tmp/
+```
+
+### Step 3 — Extract the plugin to the SO plugins directory
+
+On the SO host, extract only the `babel/` plugin directory to `/nsm/kibana/plugins/`:
+
+```bash
+# Create the plugins directory if it doesn't exist
+sudo mkdir -p /nsm/kibana/plugins
+
+# Extract (unzip is not available on SO — use Python)
+cd /tmp
+python3 -m zipfile -e babel-<version>.zip .
+
+# Move the plugin into place
+sudo cp -r babel/ /nsm/kibana/plugins/babel
+```
+
+Verify the structure:
+
+```bash
+ls /nsm/kibana/plugins/babel/
+# Expected: kibana.json  package.json  server/  target/
+```
+
+### Step 4 — Restart Kibana
+
+Use the SO management command (not `docker restart`):
+
+```bash
+sudo so-kibana-restart
+```
+
+Kibana takes ~60–90 seconds to start. Watch the logs:
+
+```bash
+sudo tail -f /opt/so/log/kibana/kibana.log
+# or
+sudo docker logs -f so-kibana 2>&1 | grep -i "babel\|plugin\|error"
+```
+
+A successful load shows a line like:
+```
+Plugin "babel" is enabled
+```
+
+### Step 5 — Deploy the Babel API
+
+The Kibana plugin requires the Babel API (Python Flask service) for rule conversion, coverage, and IR readiness. Copy the `api/` directory from the extracted zip and run it on the SO host or on a reachable host:
+
+```bash
+cd /tmp/api
+
+# Option A — run with Docker (recommended)
+docker build -t babel-api .
+docker run -d --name babel-api -p 8001:8001 babel-api
+
+# Option B — run with Python directly
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python3 app.py
+```
+
+The API listens on port `8001` by default.
+
+### Step 6 — Configure the Babel API URL in Kibana
+
+Babel needs to know where the Babel API is running. Add the following to your SO Kibana configuration:
+
+```bash
+sudo vi /opt/so/conf/kibana/kibana.yml
+```
+
+```yaml
+babel.sigmaApiUrl: "http://<babel-api-host>:8001/v1"
+```
+
+Then restart Kibana again:
+
+```bash
+sudo so-kibana-restart
+```
+
+### Verification
+
+```bash
+# Check Kibana loaded the plugin
+sudo docker logs so-kibana 2>&1 | grep -i babel
+
+# Check the Babel API is reachable
+curl http://<babel-api-host>:8001/health
+# → {"status": "ok"}
+
+# Check Babel's own status endpoint
+curl -u elastic:<password> http://localhost:5601/api/babel/status
+```
+
+Then open Kibana in your browser and look for **Babel** in the left sidebar.
+
+### Uninstalling
+
+```bash
+sudo rm -rf /nsm/kibana/plugins/babel
+sudo so-kibana-restart
 ```
 
 ---
@@ -340,13 +460,6 @@ On success the script produces:
 - `target/babel-<version>.zip` — distributable zip ready for `kibana-plugin install`
 
 If the Docker container `kibana-local-dev` is running, the script also copies the plugin into the container and restarts Kibana automatically.
-
-### 4. Manual install (no Docker)
-
-```bash
-cp -r target/babel/ /usr/share/kibana/plugins/babel
-# Then restart Kibana
-```
 
 ---
 
